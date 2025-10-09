@@ -66,6 +66,37 @@ body {
   margin: 0;
 }
 
+.challenge-steps {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  color: #344054;
+}
+
+.challenge-steps li {
+  font-size: 0.95rem;
+}
+
+.challenge-steps a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.challenge-steps a:hover,
+.challenge-steps a:focus-visible {
+  text-decoration: underline;
+}
+
+.challenge-dates {
+  margin: 1rem 0 0;
+  font-weight: 600;
+  color: #1d2939;
+}
+
 .auth-btn {
   align-self: flex-start;
   background: #2563eb;
@@ -155,6 +186,13 @@ body {
   background: rgba(37, 99, 235, 0.07);
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
+}
+
+.challenge-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #475467;
+  text-align: center;
 }
 
 .sync-pill__dot {

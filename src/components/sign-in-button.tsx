@@ -59,7 +59,7 @@ export default function SignInButton({ variant = "signin", name }: Props) {
         : `Sign out${name ? ` (${name})` : ""}`
       : loading
       ? "Opening Google..."
-      : "Sign in with Google";
+      : "Join Now";
 
   return (
     <button className="auth-btn" type="button" onClick={handleClick} disabled={loading}>
