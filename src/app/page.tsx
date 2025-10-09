@@ -2,30 +2,6 @@ import { auth } from "@/lib/auth";
 import { fetchLeaderboard } from "@/lib/leaderboard";
 import SignInButton from "@/components/sign-in-button";
 
-function formatRelative(date: Date | null): string {
-  if (!date) {
-    return "Sync pending";
-  }
-
-  const diffMs = Date.now() - date.getTime();
-  if (diffMs < 45_000) {
-    return "Updated just now";
-  }
-
-  const minutes = Math.round(diffMs / 60_000);
-  if (minutes < 60) {
-    return `Updated ${minutes} min ago`;
-  }
-
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) {
-    return `Updated ${hours} hr${hours > 1 ? "s" : ""} ago`;
-  }
-
-  const days = Math.round(hours / 24);
-  return `Updated ${days} day${days > 1 ? "s" : ""} ago`;
-}
-
 export default async function LeaderboardPage() {
   const session = await auth();
   const leaderboard = await fetchLeaderboard(100);
@@ -94,22 +70,20 @@ export default async function LeaderboardPage() {
                   </td>
                   <td className="steps">
                     <div className="steps-value">{entry.totalSteps.toLocaleString()}</div>
-                    <div
-                      className={[
-                        "sync-pill",
-                        entry.isRefreshing ? "sync-pill--refreshing" : "",
-                        entry.syncStatus === "error" ? "sync-pill--error" : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      <span className="sync-pill__dot" aria-hidden="true" />
-                      {entry.isRefreshing
-                        ? "Refreshing..."
-                        : entry.syncStatus === "error"
-                        ? "Sync failed"
-                        : formatRelative(entry.lastSyncedAt)}
-                    </div>
+                    {(entry.isRefreshing || entry.syncStatus === "error") && (
+                      <div
+                        className={[
+                          "sync-pill",
+                          entry.isRefreshing ? "sync-pill--refreshing" : "",
+                          entry.syncStatus === "error" ? "sync-pill--error" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      >
+                        <span className="sync-pill__dot" aria-hidden="true" />
+                        {entry.isRefreshing ? "Refreshing..." : "Sync failed"}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
