@@ -6,6 +6,8 @@ export default async function LeaderboardPage() {
   const session = await auth();
   const leaderboard = await fetchLeaderboard(100);
   const hasEntries = leaderboard.length > 0;
+  const podiumEmojis = ["🔥", "💪", "⚡"];
+  const podiumTitles = ["On Fire", "Flexing Hard", "Charged Up"];
 
   return (
     <main className="page leaderboard-page">
@@ -54,8 +56,26 @@ export default async function LeaderboardPage() {
             </thead>
             <tbody>
               {leaderboard.map((entry, index) => (
-                <tr key={entry.participantId}>
-                  <td className="rank">{index + 1}</td>
+                <tr
+                  key={entry.participantId}
+                  className={
+                    index < 3
+                      ? `leaderboard-row leaderboard-row--podium leaderboard-row--podium-${index + 1}`
+                      : "leaderboard-row"
+                  }
+                >
+                  <td className="rank">
+                    <span className="rank-number">{index + 1}</span>
+                    {index < 3 ? (
+                      <span
+                        className={`rank-emoji rank-emoji--${index + 1}`}
+                        aria-hidden="true"
+                        role="img"
+                      >
+                        {podiumEmojis[index]}
+                      </span>
+                    ) : null}
+                  </td>
                   <td>
                     <div className="participant">
                       {entry.photo ? (
@@ -65,6 +85,11 @@ export default async function LeaderboardPage() {
                       <div>
                         <p className="participant-name">{entry.name}</p>
                         <p className="participant-email">{entry.email}</p>
+                        {index < 3 ? (
+                          <p className={`podium-label podium-label--${index + 1}`}>
+                            {podiumTitles[index]}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                   </td>

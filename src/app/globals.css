@@ -186,6 +186,10 @@ body {
   border-bottom: 1px solid #f0f2f5;
 }
 
+.leaderboard-row {
+  position: relative;
+}
+
 .leaderboard tbody tr {
   opacity: 0;
   transform: translateY(12px);
@@ -217,6 +221,22 @@ body {
   animation-delay: 0.3s;
 }
 
+.leaderboard-row--podium {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.leaderboard-row--podium-1 {
+  background: rgba(250, 205, 21, 0.12);
+}
+
+.leaderboard-row--podium-2 {
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.leaderboard-row--podium-3 {
+  background: rgba(249, 115, 22, 0.1);
+}
+
 @media (pointer: fine) {
   .leaderboard tbody tr:hover,
   .leaderboard tbody tr:focus-within {
@@ -235,6 +255,24 @@ body {
   font-weight: 700;
   text-align: center;
   color: #1d2939;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.rank-number {
+  font-size: 1.05rem;
+}
+
+.rank-emoji {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 6px 10px rgba(17, 24, 39, 0.18));
+}
+
+.rank-emoji--1 {
+  font-size: 1.65rem;
 }
 
 .steps {
@@ -349,6 +387,41 @@ body {
   color: #667085;
 }
 
+.podium-label {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.podium-label--1 {
+  color: #ca8a04;
+}
+
+.podium-label--2 {
+  color: #475569;
+}
+
+.podium-label--3 {
+  color: #ea580c;
+}
+
+.leaderboard-row--podium-1 .rank {
+  background: linear-gradient(135deg, #facc15, #fbbf24);
+  color: #92400e;
+}
+
+.leaderboard-row--podium-2 .rank {
+  background: linear-gradient(135deg, #cbd5f5, #94a3b8);
+  color: #1e293b;
+}
+
+.leaderboard-row--podium-3 .rank {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  color: #7c2d12;
+}
+
 .empty-state {
   text-align: center;
   margin-bottom: 2rem;
@@ -435,9 +508,8 @@ body {
   }
 
   .rank {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0.3rem;
     grid-area: rank;
     width: 44px;
     height: 44px;
@@ -446,6 +518,15 @@ body {
     color: #1d4ed8;
     font-size: 0.95rem;
     font-weight: 700;
+  }
+
+  .rank-number {
+    font-size: 1.05rem;
+  }
+
+  .rank-emoji {
+    font-size: 1.3rem;
+    filter: none;
   }
 
   .steps {
@@ -483,8 +564,43 @@ body {
     background: rgba(248, 250, 252, 0.8);
   }
 
+  .leaderboard-row--podium {
+    background: rgba(37, 99, 235, 0.05);
+  }
+
+  .leaderboard-row--podium-1 {
+    background: rgba(250, 205, 21, 0.12);
+  }
+
+  .leaderboard-row--podium-2 {
+    background: rgba(148, 163, 184, 0.16);
+  }
+
+  .leaderboard-row--podium-3 {
+    background: rgba(249, 115, 22, 0.12);
+  }
+
   .steps {
     align-items: flex-start;
+  }
+
+  .podium-label {
+    font-size: 0.7rem;
+  }
+
+  .leaderboard-row--podium-1 .rank {
+    background: linear-gradient(135deg, #facc15, #fbbf24);
+    color: #92400e;
+  }
+
+  .leaderboard-row--podium-2 .rank {
+    background: linear-gradient(135deg, #cbd5f5, #94a3b8);
+    color: #1e293b;
+  }
+
+  .leaderboard-row--podium-3 .rank {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+    color: #7c2d12;
   }
 
   .sync-pill {
