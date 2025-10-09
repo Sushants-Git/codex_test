@@ -542,7 +542,7 @@ body {
   }
 
   .participant-email {
-    font-size: 0.8rem;
+    display: none;
   }
 
   .leaderboard--preview tbody tr {
@@ -589,6 +589,10 @@ body {
 
   .podium-label {
     font-size: 0.7rem;
+  }
+
+  .auth-btn--icon {
+    display: none;
   }
 
   .sync-pill {
