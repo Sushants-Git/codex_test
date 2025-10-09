@@ -25,6 +25,7 @@ type StepsDataDocument = {
   steps?: number;
   updatedAt?: Date | string;
   lastSyncedAt?: Date | string;
+  refreshStartedAt?: Date | string;
   status?: "ready" | "refreshing" | "error";
   errorMessage?: string;
 };
@@ -80,10 +81,19 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
       const totalSteps = typeof stepsDoc?.steps === "number" ? stepsDoc.steps : 0;
       const status = stepsDoc?.status ?? "ready";
 
-      const needsRefresh = shouldRefresh(lastSyncedDate, status);
+      const now = Date.now();
+      const needsRefresh = shouldRefresh(lastSyncedDate, now);
       if (needsRefresh) {
         staleParticipants.push(doc);
       }
+
+      const refreshStartedAt = stepsDoc?.refreshStartedAt
+        ? new Date(stepsDoc.refreshStartedAt)
+        : null;
+      const isRefreshing =
+        status === "refreshing" &&
+        (!refreshStartedAt || now - refreshStartedAt.getTime() < THIRTY_MINUTES_MS);
+      const syncStatus = status === "error" ? "error" : needsRefresh ? "stale" : status;
 
       return {
         participantId: doc._id.toString(),
@@ -92,8 +102,8 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
         photo: doc.profileImageUrl ?? undefined,
         totalSteps,
         lastSyncedAt: lastSyncedDate,
-        isRefreshing: status === "refreshing" || needsRefresh,
-        syncStatus: needsRefresh ? "stale" : status,
+        isRefreshing,
+        syncStatus,
       };
     })
     .sort((a, b) => {
@@ -111,16 +121,11 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
   return rows;
 }
 
-function shouldRefresh(lastSyncedAt: Date | null, status: StepsDataDocument["status"] | undefined) {
-  if (status === "refreshing") {
-    return false;
-  }
-
+function shouldRefresh(lastSyncedAt: Date | null, now = Date.now()) {
   if (!lastSyncedAt) {
     return true;
   }
 
-  const now = Date.now();
   return now - lastSyncedAt.getTime() > THIRTY_MINUTES_MS;
 }
 
