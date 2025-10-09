@@ -2,9 +2,11 @@ import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
-const uri = process.env.MONGODB_URI
+const uri = process.env.MONGODB_URI;
 
 async function main() {
+    if (!uri) return "Mongodb uri not found";
+
     const client = new MongoClient(uri);
 
     try {
