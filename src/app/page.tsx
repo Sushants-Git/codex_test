@@ -57,9 +57,9 @@ export default async function LeaderboardPage() {
             <thead>
               <tr>
                 <th scope="col">Rank</th>
-                <th scope="col">Participant</th>
+                <th scope="col">Name</th>
                 <th scope="col" className="right-align">
-                  Estimated Steps
+                  Steps
                 </th>
               </tr>
             </thead>
@@ -93,7 +93,6 @@ export default async function LeaderboardPage() {
                       ) : null}
                       <div>
                         <p className="participant-name">{entry.name}</p>
-                        <p className="participant-email">{entry.email}</p>
                         {index < 3 ? (
                           <p className={`podium-label podium-label--${index + 1}`}>
                             {podiumTitles[index]}
