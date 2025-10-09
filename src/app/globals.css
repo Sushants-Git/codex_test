@@ -110,13 +110,45 @@ body {
   box-shadow: none;
 }
 
-.auth-btn:hover,
-.auth-btn:focus-visible {
+.auth-btn__icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.auth-btn--icon {
+  background: transparent;
+  color: #98a2b3;
+  border: none;
+  padding: 0.35rem;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.auth-btn--icon:hover,
+.auth-btn--icon:focus-visible {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  transform: none;
+}
+
+.auth-btn--icon:disabled {
+  opacity: 0.6;
+  background: transparent;
+  color: #98a2b3;
+}
+
+.auth-btn:not(.auth-btn--icon):hover,
+.auth-btn:not(.auth-btn--icon):focus-visible {
   transform: translateY(-1px);
   background: #1d4ed8;
 }
 
-.auth-btn:disabled {
+.auth-btn:not(.auth-btn--icon):disabled {
   cursor: wait;
   opacity: 0.75;
   transform: none;

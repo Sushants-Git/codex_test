@@ -52,6 +52,7 @@ export default function SignInButton({ variant = "signin", name }: Props) {
   }, []);
 
   const handleClick = variant === "signout" ? handleSignOut : handleSignIn;
+  const isSignOut = variant === "signout";
   const label =
     variant === "signout"
       ? loading
@@ -60,10 +61,27 @@ export default function SignInButton({ variant = "signin", name }: Props) {
       : loading
       ? "Opening Google..."
       : "Join Now";
+  const buttonClassName = ["auth-btn", isSignOut ? "auth-btn--icon" : ""]
+    .filter(Boolean)
+    .join(" ");
+  const buttonContent = isSignOut ? (
+    <span className="auth-btn__icon" aria-hidden="true">
+      {loading ? "…" : "🚪"}
+    </span>
+  ) : (
+    label
+  );
 
   return (
-    <button className="auth-btn" type="button" onClick={handleClick} disabled={loading}>
-      {label}
+    <button
+      className={buttonClassName}
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      aria-label={isSignOut ? "Sign out" : undefined}
+      title={isSignOut ? "Sign out" : undefined}
+    >
+      {buttonContent}
     </button>
   );
 }
