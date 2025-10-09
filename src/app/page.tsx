@@ -6,8 +6,7 @@ const FOOTER_PUNCHLINES = [
   "Made with glutton free bread!",
   "Powered by 4 a.m. cardio and questionable life choices.",
   "Whipped up after taking leave to hit the gym.",
-  "Fueled by protein shakes and endless step counts.",
-  "Crafted between burpees, squats, and snack breaks.",
+  "One push-up per bug and the tech team would be absolutely shredded."
 ];
 
 export default async function LeaderboardPage() {
