@@ -407,21 +407,6 @@ body {
   color: #ea580c;
 }
 
-.leaderboard-row--podium-1 .rank {
-  background: linear-gradient(135deg, #facc15, #fbbf24);
-  color: #92400e;
-}
-
-.leaderboard-row--podium-2 .rank {
-  background: linear-gradient(135deg, #cbd5f5, #94a3b8);
-  color: #1e293b;
-}
-
-.leaderboard-row--podium-3 .rank {
-  background: linear-gradient(135deg, #fb923c, #f97316);
-  color: #7c2d12;
-}
-
 .empty-state {
   text-align: center;
   margin-bottom: 2rem;
@@ -586,21 +571,6 @@ body {
 
   .podium-label {
     font-size: 0.7rem;
-  }
-
-  .leaderboard-row--podium-1 .rank {
-    background: linear-gradient(135deg, #facc15, #fbbf24);
-    color: #92400e;
-  }
-
-  .leaderboard-row--podium-2 .rank {
-    background: linear-gradient(135deg, #cbd5f5, #94a3b8);
-    color: #1e293b;
-  }
-
-  .leaderboard-row--podium-3 .rank {
-    background: linear-gradient(135deg, #fb923c, #f97316);
-    color: #7c2d12;
   }
 
   .sync-pill {
