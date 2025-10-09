@@ -127,6 +127,7 @@ export default async function LeaderboardPage() {
         )}
       </section>
       <p className="challenge-note">Note: Data might take around an hour to update.</p>
+      <p className="challenge-note challenge-note--bread">Made with glutton free bread!</p>
     </main>
   );
 }

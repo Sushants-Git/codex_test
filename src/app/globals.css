@@ -250,6 +250,7 @@ body {
   border-bottom: none;
 }
 
+.rank {
   width: 60px;
   font-weight: 700;
   text-align: center;
@@ -306,6 +307,12 @@ body {
   font-size: 0.9rem;
   color: #475467;
   text-align: center;
+}
+
+.challenge-note--bread {
+  margin-top: 0.75rem;
+  font-style: italic;
+  color: #667085;
 }
 
 .sync-pill__dot {
