@@ -90,10 +90,29 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
       const refreshStartedAt = stepsDoc?.refreshStartedAt
         ? new Date(stepsDoc.refreshStartedAt)
         : null;
+      const millisecondsSinceRefreshStart = refreshStartedAt
+        ? now - refreshStartedAt.getTime()
+        : null;
+      const refreshTimedOut =
+        status === "refreshing" && millisecondsSinceRefreshStart != null && millisecondsSinceRefreshStart > 60 * 1000;
+
       const isRefreshing =
         status === "refreshing" &&
-        (!refreshStartedAt || now - refreshStartedAt.getTime() < THIRTY_MINUTES_MS);
-      const syncStatus = status === "error" ? "error" : needsRefresh ? "stale" : status;
+        !refreshTimedOut &&
+        (!refreshStartedAt || millisecondsSinceRefreshStart! < THIRTY_MINUTES_MS);
+
+      const effectiveStatus =
+        refreshTimedOut || needsRefresh
+          ? "stale"
+          : status === "error"
+          ? "error"
+          : status;
+
+      if (refreshTimedOut && !needsRefresh) {
+        staleParticipants.push(doc);
+      }
+
+      const syncStatus = effectiveStatus;
 
       return {
         participantId: doc._id.toString(),
