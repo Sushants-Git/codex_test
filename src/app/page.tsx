@@ -2,12 +2,22 @@ import { auth } from "@/lib/auth";
 import { fetchLeaderboard } from "@/lib/leaderboard";
 import SignInButton from "@/components/sign-in-button";
 
+const FOOTER_PUNCHLINES = [
+  "Made with glutton free bread!",
+  "Powered by 4 a.m. cardio and questionable life choices.",
+  "Whipped up after taking leave to hit the gym.",
+  "Fueled by protein shakes and endless step counts.",
+  "Crafted between burpees, squats, and snack breaks.",
+];
+
 export default async function LeaderboardPage() {
   const session = await auth();
   const leaderboard = await fetchLeaderboard(100);
   const hasEntries = leaderboard.length > 0;
   const podiumEmojis = ["🔥", "💪", "⚡"];
   const podiumTitles = ["On Fire", "Flexing Hard", "Charged Up"];
+  const footerPunchline =
+    FOOTER_PUNCHLINES[Math.floor(Math.random() * FOOTER_PUNCHLINES.length)];
 
   return (
     <main className="page leaderboard-page">
@@ -127,7 +137,7 @@ export default async function LeaderboardPage() {
         )}
       </section>
       <p className="challenge-note">Note: Data might take around an hour to update.</p>
-      <p className="challenge-note challenge-note--bread">Made with glutton free bread!</p>
+      <p className="challenge-note challenge-note--bread">{footerPunchline}</p>
     </main>
   );
 }
