@@ -267,8 +267,10 @@ body {
 }
 
 .rank-emoji {
+  display: inline-block;
   font-size: 1.5rem;
   filter: drop-shadow(0 6px 10px rgba(17, 24, 39, 0.18));
+  transform-origin: center;
 }
 
 .rank-emoji--1 {
@@ -406,6 +408,39 @@ body {
 
 .podium-label--3 {
   color: #ea580c;
+}
+
+.leaderboard-row--podium-1 .rank-emoji {
+  animation: podiumBoom 0.7s ease-out 0.15s both;
+}
+
+.leaderboard-row--podium-2 .rank-emoji {
+  animation: podiumBoom 0.7s ease-out 0.55s both;
+}
+
+.leaderboard-row--podium-3 .rank-emoji {
+  animation: podiumBoom 0.7s ease-out 0.95s both;
+}
+
+@keyframes podiumBoom {
+  0% {
+    transform: scale(0.9);
+  }
+  25% {
+    transform: scale(1.45) rotate(-6deg);
+  }
+  45% {
+    transform: scale(1.25) rotate(5deg);
+  }
+  65% {
+    transform: scale(1.35) rotate(-3deg);
+  }
+  85% {
+    transform: scale(1.15) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
 }
 
 .empty-state {
@@ -597,5 +632,13 @@ body {
 
   .sync-pill {
     font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaderboard tbody tr,
+  .leaderboard-row--podium .rank-emoji,
+  .sync-pill--refreshing .sync-pill__dot {
+    animation: none !important;
   }
 }
