@@ -497,11 +497,11 @@ body {
     flex-direction: column;
     gap: 0.3rem;
     grid-area: rank;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: #e0eaff;
-    color: #1d4ed8;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+    color: #1d2939;
     font-size: 0.95rem;
     font-weight: 700;
   }
