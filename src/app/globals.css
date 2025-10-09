@@ -183,7 +183,7 @@ body {
 
 .leaderboard tbody td {
   padding: 1rem 0;
-  border-bottom: 1px solid #f0f2f5;
+  /* border-bottom: 1px solid #f0f2f5; */
 }
 
 .leaderboard-row {
@@ -286,6 +286,7 @@ body {
   font-weight: 600;
   color: #1d2939;
   font-size: 1.15rem;
+  margin-right: 1rem;
 }
 
 .sync-pill {
