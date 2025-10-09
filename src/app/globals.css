@@ -111,8 +111,9 @@ body {
 }
 
 .auth-btn__icon {
-  font-size: 1.35rem;
-  line-height: 1;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 .auth-btn--icon {
