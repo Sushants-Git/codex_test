@@ -1,13 +1,16 @@
 import { challengeWindowMillis } from "./challenge";
 
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
-const AGGREGATE_ENDPOINT = "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate";
+const AGGREGATE_ENDPOINT =
+    "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate";
 
 const clientId = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 if (!clientId || !clientSecret) {
-    throw new Error("Missing Google client credentials in environment variables.");
+    throw new Error(
+        "Missing Google client credentials in environment variables."
+    );
 }
 
 type GoogleTokenSet = {
@@ -30,14 +33,18 @@ type EnsureAccessTokenResult = {
     };
 };
 
-export async function ensureAccessToken(tokens: GoogleTokenSet): Promise<EnsureAccessTokenResult> {
+export async function ensureAccessToken(
+    tokens: GoogleTokenSet
+): Promise<EnsureAccessTokenResult> {
     if (!tokens.refreshToken) {
         throw new Error("Participant does not have a refresh token.");
     }
 
     const expiryDate = tokens.expiryDate ? new Date(tokens.expiryDate) : null;
     const shouldRefresh =
-        !tokens.accessToken || !expiryDate || expiryDate.getTime() - Date.now() < 60 * 1000;
+        !tokens.accessToken ||
+        !expiryDate ||
+        expiryDate.getTime() - Date.now() < 60 * 1000;
 
     if (!shouldRefresh && tokens.accessToken) {
         return {
@@ -70,7 +77,9 @@ export async function ensureAccessToken(tokens: GoogleTokenSet): Promise<EnsureA
 
     if (!response.ok) {
         const errorBody = await response.text();
-        throw new Error(`Failed to refresh Google token: ${response.status} ${errorBody}`);
+        throw new Error(
+            `Failed to refresh Google token: ${response.status} ${errorBody}`
+        );
     }
 
     const tokenPayload = (await response.json()) as {
@@ -96,97 +105,142 @@ export async function ensureAccessToken(tokens: GoogleTokenSet): Promise<EnsureA
 }
 
 export async function fetchTotalSteps(accessToken: string): Promise<number> {
-  // 1️⃣ Fetch all data sources
-  const sourcesResponse = await fetch(
-    "https://www.googleapis.com/fitness/v1/users/me/dataSources",
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
-
-  if (!sourcesResponse.ok) {
-    const errorBody = await sourcesResponse.text();
-    throw new Error(`Failed to fetch data sources: ${sourcesResponse.status} ${errorBody}`);
-  }
-
-  const sourcesData = await sourcesResponse.json();
-  const allSources = sourcesData.dataSource ?? [];
-
-  // ✅ Filter to only step_count.delta sources, excluding manual (user_input)
-  const stepSources = allSources.filter(
-    (src: any) =>
-      src.dataStreamId?.includes("com.google.step_count.delta") &&
-      !src.dataStreamId?.includes("user_input")
-  );
-
-  if (stepSources.length === 0) {
-    throw new Error("No valid step sources found (excluding user_input).");
-  }
-
-  // 2️⃣ Aggregate data from all valid sources
-  const aggregateBy = stepSources.map((src: any) => ({
-    dataSourceId: src.dataStreamId,
-  }));
-
-  const payload = {
-    aggregateBy,
-    bucketByTime: { durationMillis: 24 * 60 * 60 * 1000 },
-    startTimeMillis: challengeWindowMillis.start,
-    endTimeMillis: challengeWindowMillis.end,
-  };
-
-  const response = await fetch(
-    "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    }
-  );
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Failed to fetch Google Fit data: ${response.status} ${errorBody}`);
-  }
-
-  const data = await response.json();
-
-  // 3️⃣ Process each day's bucket
-  let totalSteps = 0;
-  const dailySteps: { date: string; steps: number; source?: string }[] = [];
-
-  for (const bucket of data.bucket ?? []) {
-    const dateKey = new Date(parseInt(bucket.startTimeMillis)).toISOString().split("T")[0];
-    let daySteps = 0;
-
-    // Ignore all datasets except the first valid non-user_input one
-    const validDataset = bucket.dataset?.find(
-      (d) =>
-        d.point?.[0]?.originDataSourceId &&
-        !d.point[0].originDataSourceId.includes("user_input") &&
-        d.point[0].value?.[0]?.intVal > 0
+    // 1️⃣ Fetch all data sources
+    const sourcesResponse = await fetch(
+        "https://www.googleapis.com/fitness/v1/users/me/dataSources",
+        { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
-    if (!validDataset) continue; // skip empty days
+    if (!sourcesResponse.ok) {
+        const errorBody = await sourcesResponse.text();
+        throw new Error(
+            `Failed to fetch data sources: ${sourcesResponse.status} ${errorBody}`
+        );
+    }
 
-    const point = validDataset.point[0];
-    const steps =
-      point.value?.[0]?.intVal ??
-      (point.value?.[0]?.fpVal ? Math.round(point.value[0].fpVal) : 0);
+    const sourcesData = await sourcesResponse.json();
+    const allSources = sourcesData.dataSource ?? [];
 
-    daySteps = steps;
-    totalSteps += steps;
+    // ✅ Filter to only step_count.delta sources, excluding manual (user_input)
+    const stepSources = allSources.filter(
+        (src: any) =>
+            src.dataStreamId?.includes("com.google.step_count.delta") &&
+            !src.dataStreamId?.includes("user_input")
+    );
 
-    dailySteps.push({
-      date: dateKey,
-      steps: daySteps,
-      source: point.originDataSourceId,
+    if (stepSources.length === 0) {
+        throw new Error("No valid step sources found (excluding user_input).");
+    }
+
+    let aggregateBy;
+
+    const estimated = stepSources.find((src: any) =>
+        src.dataStreamId.includes("estimated_steps")
+    );
+
+    if (estimated) {
+        aggregateBy = [{ dataSourceId: estimated.dataStreamId }];
+    } else {
+        aggregateBy = stepSources.map((src: any) => ({
+            dataSourceId: src.dataStreamId,
+        }));
+    }
+
+    const payload = {
+        aggregateBy,
+        bucketByTime: { durationMillis: 24 * 60 * 60 * 1000 },
+        startTimeMillis: challengeWindowMillis.start,
+        endTimeMillis: challengeWindowMillis.end,
+    };
+
+    const response = await fetch(
+        "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        }
+    );
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(
+            `Failed to fetch Google Fit data: ${response.status} ${errorBody}`
+        );
+    }
+
+    const data = await response.json();
+
+    // 3️⃣ Process each day's bucket
+    let totalSteps = 0;
+    const dailySteps: { date: string; steps: number; source?: string }[] = [];
+
+    data.bucket.forEach((b, i) => {
+        const start = new Date(parseInt(b.startTimeMillis)).toLocaleString(
+            "en-IN",
+            {
+                timeZone: "Asia/Kolkata",
+            }
+        );
+        const end = new Date(parseInt(b.endTimeMillis)).toLocaleString(
+            "en-IN",
+            {
+                timeZone: "Asia/Kolkata",
+            }
+        );
+
+        console.log(`Bucket ${i + 1}:`);
+        console.log(`  Start: ${start}`);
+        console.log(`  End:   ${end}`);
+        console.log(JSON.stringify(b, null, 2));
+        console.log("----------------------");
     });
-  }
 
-  console.table(dailySteps);
-  console.log("🏃‍♂️ Total real steps:", totalSteps);
+    for (const bucket of data.bucket ?? []) {
+        const dateKey = new Date(
+            parseInt(bucket.startTimeMillis)
+        ).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+        });
 
-  return totalSteps;
+        // .toISOString()
+        // .split("T")[0];
+        let daySteps = 0;
+
+        // Ignore all datasets except the first valid non-user_input one
+        const validDataset = bucket.dataset?.find(
+            (d) =>
+                d.point?.[0]?.originDataSourceId &&
+                !d.point[0].originDataSourceId.includes("user_input") &&
+                d.point[0].value?.[0]?.intVal > 0
+        );
+
+        if (!validDataset) continue; // skip empty days
+
+        const point = validDataset.point[0];
+        const steps =
+            point.value?.[0]?.intVal ??
+            (point.value?.[0]?.fpVal ? Math.round(point.value[0].fpVal) : 0);
+
+        console.log(steps);
+
+        daySteps = steps;
+        totalSteps += steps;
+
+        dailySteps.push({
+            date: dateKey,
+            steps: daySteps,
+            source: point.originDataSourceId,
+        });
+    }
+
+    // console.log(JSON.stringify(data.bucket, null, 2));
+
+    console.table(dailySteps);
+    console.log("🏃‍♂️ Total real steps:", totalSteps);
+
+    return totalSteps;
 }

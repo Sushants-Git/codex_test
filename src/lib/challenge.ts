@@ -12,6 +12,7 @@ function createIstDate(
 ): Date {
   const utcDate = new Date(Date.UTC(CHALLENGE_YEAR, CHALLENGE_MONTH, day, hour, minute, second, millisecond));
   const utcMillis = utcDate.getTime() - IST_OFFSET_MINUTES * 60 * 1000;
+
   return new Date(utcMillis);
 }
 
