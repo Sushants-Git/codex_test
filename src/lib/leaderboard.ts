@@ -90,7 +90,7 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
 
             const now = Date.now();
             const needsRefresh = shouldRefresh(lastSyncedDate, now);
-            if (needsRefresh || true) {
+            if (needsRefresh) {
                 staleParticipants.push(doc);
             }
 
