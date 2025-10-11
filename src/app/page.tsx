@@ -103,7 +103,7 @@ export default async function LeaderboardPage() {
                   </td>
                   <td className="steps">
                     <div className="steps-value">{entry.totalSteps.toLocaleString()}</div>
-                    {(entry.isRefreshing || entry.syncStatus === "error") && (
+                    {(entry.syncStatus === "error") && (
                       <div
                         className={[
                           "sync-pill",
