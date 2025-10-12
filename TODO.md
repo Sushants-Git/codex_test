@@ -24,6 +24,7 @@
 - [ ] Add Google Fit sessions retrieval (`users.sessions.list`) to support 30-minute activity snapshots.
 - [x] Trigger Google Fit aggregation for all participants whenever the leaderboard is requested, using caching to stay within API limits (stale refresh detection now retries when last sync exceeds 30 minutes).
 - [x] Cache aggregated steps for the leaderboard window (6 Oct 00:00 IST - 30 Oct 23:59 IST) per user to minimize API usage.
+- [x] Expose `/api/refresh` GET endpoint to refresh stale participants or force a resync on demand.
 - [ ] Store the computed 30-minute activity snapshot in MongoDB for potential “recent effort” views (no manual sync timestamps needed).
 
 ## 4. Supporting Views & UX Polish
