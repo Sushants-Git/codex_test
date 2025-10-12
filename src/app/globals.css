@@ -481,14 +481,25 @@ body {
     flex-direction: column;
     align-items: stretch;
     gap: 1.5rem;
+    position: relative;
   }
 
-  .auth-btn {
+  .auth-btn:not(.auth-btn--icon) {
     width: 100%;
     text-align: center;
     padding: 1rem 1.2rem;
     font-size: 1rem;
     border-radius: 14px;
+  }
+
+  .leaderboard-copy {
+    padding-right: 3.5rem;
+  }
+
+  .leaderboard-header > .auth-btn--icon {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
 
   .leaderboard-card {
@@ -630,10 +641,6 @@ body {
 
   .podium-label {
     font-size: 0.7rem;
-  }
-
-  .auth-btn--icon {
-    display: none;
   }
 
   .sync-pill {
