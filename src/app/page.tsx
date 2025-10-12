@@ -1,3 +1,4 @@
+import { unstable_noStore } from "next/cache";
 import { auth } from "@/lib/auth";
 import { fetchLeaderboard } from "@/lib/leaderboard";
 import SignInButton from "@/components/sign-in-button";
@@ -10,6 +11,7 @@ const FOOTER_PUNCHLINES = [
 ];
 
 export default async function LeaderboardPage() {
+  unstable_noStore();
   const session = await auth();
   const leaderboard = await fetchLeaderboard(100);
   const hasEntries = leaderboard.length > 0;

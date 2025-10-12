@@ -1,4 +1,7 @@
+import { unstable_noStore } from "next/cache";
+
 export default function JoinPage() {
+  unstable_noStore();
   return (
     <main className="page">
       <h1>Join the Fit Month Challenge</h1>
