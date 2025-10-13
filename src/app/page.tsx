@@ -2,6 +2,7 @@ import { unstable_noStore } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { fetchLeaderboard } from '@/lib/leaderboard';
 import SignInButton from '@/components/sign-in-button';
+import PageHeader from '@/components/page-header';
 
 const FOOTER_PUNCHLINES = [
     'Made with glutton free bread!',
@@ -44,47 +45,7 @@ export default async function LeaderboardPage() {
 
     return (
         <main className="page leaderboard-page">
-            <header className="leaderboard-header">
-                <div className="leaderboard-copy">
-                    <p className="badge">#GetFitOctober | 6-31 Oct</p>
-                    <h1>#GetFitOctober By Swipe</h1>
-                    <p className="lede">
-                        Ready to step up and crush your fitness goals? Track
-                        every stride this October—our top three step masters
-                        bring home the prizes.
-                    </p>
-                    <ul className="challenge-steps">
-                        <li>
-                            <strong>Step 1:</strong>{' '}
-                            <a
-                                href="https://www.google.com/fit/"
-                                target="_blank"
-                                rel="noreferrer noopener"
-                            >
-                                Install the Google Fit app
-                            </a>
-                        </li>
-                        <li>
-                            <strong>Step 2:</strong>{' '}
-                            <a
-                                href="https://forms.gle/oj6tCHpporSjAsoW7"
-                                target="_blank"
-                                rel="noreferrer noopener"
-                            >
-                                Register for the challenge
-                            </a>
-                        </li>
-                    </ul>
-                    <p className="challenge-dates">
-                        Challenge runs from 6 October to 31 October (IST).
-                    </p>
-                </div>
-                {session?.user ? (
-                    <SignInButton variant="signout" name={session.user.name} />
-                ) : (
-                    <SignInButton />
-                )}
-            </header>
+            <PageHeader session={session} />
 
             <section className="leaderboard-card">
                 {hasEntries ? (
