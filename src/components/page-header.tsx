@@ -57,7 +57,7 @@ export default function PageHeader({ session }: PageHeaderProps) {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.3 }}
                     >
-                        October Fitness Challenge
+                        #GetFitOctober By Swipe
                     </motion.h1>
                 </div>
 
