@@ -1,10 +1,10 @@
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
-import { NextResponse } from "next/server";
-import { ObjectId } from "mongodb";
-import { THIRTY_MINUTES_MS } from "@/lib/challenge";
-import { refreshParticipantsByIds } from "@/lib/leaderboard";
-import { getMongoClient, hasMongoUri } from "@/lib/mongodb";
+import { NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
+import { REFRESH_STEPS_THROTTLE } from '@/lib/challenge';
+import { refreshParticipantsByIds } from '@/lib/leaderboard';
+import { getMongoClient, hasMongoUri } from '@/lib/mongodb';
 
 type ParticipantWithMetrics = {
     _id: ObjectId;
@@ -14,21 +14,21 @@ type ParticipantWithMetrics = {
     } | null;
 };
 
-const COLLECTION_PARTICIPANTS = "participants";
-const COLLECTION_STEPS = "stepsdata";
+const COLLECTION_PARTICIPANTS = 'participants';
+const COLLECTION_STEPS = 'stepsdata';
 
 export async function GET(request: Request) {
     if (!hasMongoUri) {
         return NextResponse.json(
-            { error: "MongoDB not configured" },
+            { error: 'MongoDB not configured' },
             { status: 503 }
         );
     }
 
     const { searchParams } = new URL(request.url);
-    const forceParam = searchParams.get("forceRefresh");
+    const forceParam = searchParams.get('forceRefresh');
     const forceRefresh =
-        forceParam == null ? true : forceParam.toLowerCase() !== "false";
+        forceParam == null ? true : forceParam.toLowerCase() !== 'false';
 
     const client = await getMongoClient();
     const db = client.db();
@@ -39,14 +39,14 @@ export async function GET(request: Request) {
             {
                 $lookup: {
                     from: COLLECTION_STEPS,
-                    localField: "_id",
-                    foreignField: "participantId",
-                    as: "metrics",
+                    localField: '_id',
+                    foreignField: 'participantId',
+                    as: 'metrics',
                 },
             },
             {
                 $unwind: {
-                    path: "$metrics",
+                    path: '$metrics',
                     preserveNullAndEmptyArrays: true,
                 },
             },
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
             }
 
             const lastSyncedAt = new Date(lastSyncedAtRaw);
-            return now - lastSyncedAt.getTime() > THIRTY_MINUTES_MS;
+            return now - lastSyncedAt.getTime() > REFRESH_STEPS_THROTTLE;
         })
         .map((doc) => doc._id);
 
