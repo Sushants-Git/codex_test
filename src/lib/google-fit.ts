@@ -148,7 +148,8 @@ export async function fetchTotalSteps(accessToken: string): Promise<number> {
 
     const payload = {
         aggregateBy,
-        bucketByTime: { durationMillis: 24 * 60 * 60 * 1000 },
+        // bucketByTime: { durationMillis: 24 * 60 * 60 * 1000 },
+        bucketByTime: { durationMillis:  challengeWindowMillis.end - challengeWindowMillis.start},
         startTimeMillis: challengeWindowMillis.start,
         endTimeMillis: challengeWindowMillis.end,
     };
