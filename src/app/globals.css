@@ -315,6 +315,16 @@ body {
     position: relative;
 }
 
+.leaderboard-row--interactive {
+    cursor: pointer;
+}
+
+.leaderboard-row--selected {
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+    border-radius: 16px;
+    background: rgba(37, 99, 235, 0.08);
+}
+
 .leaderboard tbody tr {
     opacity: 0;
     transform: translateY(12px);
@@ -732,6 +742,171 @@ body {
     animation: none;
 }
 
+.leaderboard-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    z-index: 1000;
+    animation: fadeInOverlay 0.2s ease forwards;
+}
+
+@media (min-width: 640px) {
+    .leaderboard-modal-overlay {
+        align-items: center;
+        padding: 2rem;
+    }
+}
+
+.leaderboard-breakdown {
+    margin: 0;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: #ffffff;
+    padding: 1.75rem;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+    animation: leaderboardRowIn 0.35s ease forwards;
+    width: min(100%, 520px);
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    padding-top: 50px;
+}
+
+@media (max-width: 640px) {
+    .leaderboard-breakdown {
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        padding: 1.5rem 1.25rem 1.75rem;
+        padding-top: 50px;
+    }
+
+    .leaderboard-breakdown__title {
+        font-size: 1.15rem;
+    }
+
+    .leaderboard-breakdown__total strong {
+        font-size: 1.5rem;
+    }
+}
+
+.leaderboard-breakdown__close {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    background: transparent;
+    border: none;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: #475569;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.leaderboard-breakdown__close:hover,
+.leaderboard-breakdown__close:focus-visible {
+    color: #1d4ed8;
+    transform: scale(1.1);
+}
+
+.leaderboard-breakdown__close:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 4px;
+}
+
+.leaderboard-breakdown__body {
+    margin-top: 1.25rem;
+}
+
+.leaderboard-breakdown__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.leaderboard-breakdown__title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.leaderboard-breakdown__meta {
+    margin-top: 0.35rem;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.leaderboard-breakdown__total {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.leaderboard-breakdown__total strong {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.leaderboard-breakdown__status {
+    margin-top: 1.25rem;
+    color: #475569;
+    font-size: 0.95rem;
+}
+
+.leaderboard-breakdown__status--error {
+    color: #dc2626;
+}
+
+.leaderboard-breakdown__status--summary {
+    color: #0f172a;
+}
+
+.leaderboard-breakdown__list {
+    margin-top: 1.5rem;
+    padding-left: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.85rem;
+}
+
+.leaderboard-breakdown__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    padding-bottom: 0.6rem;
+}
+
+.leaderboard-breakdown__item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.leaderboard-breakdown__date {
+    font-weight: 500;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.leaderboard-breakdown__steps {
+    font-variant-numeric: tabular-nums;
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
 @keyframes leaderboardRowIn {
     from {
         opacity: 0;
@@ -740,6 +915,15 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 

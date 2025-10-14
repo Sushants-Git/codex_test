@@ -1,8 +1,8 @@
 import { unstable_noStore } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { fetchLeaderboard } from '@/lib/leaderboard';
-import SignInButton from '@/components/sign-in-button';
 import PageHeader from '@/components/page-header';
+import LeaderboardTable from '@/components/leaderboard-table';
 
 const FOOTER_PUNCHLINES = [
     'Made with glutton free bread!',
@@ -43,108 +43,30 @@ export default async function LeaderboardPage() {
     const footerPunchline =
         FOOTER_PUNCHLINES[Math.floor(Math.random() * FOOTER_PUNCHLINES.length)];
 
+    const interactiveRows = leaderboard.map((entry) => ({
+        participantId: entry.participantId,
+        name: entry.name,
+        email: entry.email,
+        photo: entry.photo,
+        totalSteps: entry.totalSteps,
+        lastSyncedAt: entry.lastSyncedAt
+            ? entry.lastSyncedAt.toISOString()
+            : null,
+        isRefreshing: entry.isRefreshing,
+        syncStatus: entry.syncStatus,
+    }));
+
     return (
         <main className="page leaderboard-page">
             <PageHeader session={session} />
 
             <section className="leaderboard-card">
                 {hasEntries ? (
-                    <table className="leaderboard" role="grid">
-                        <thead>
-                            <tr>
-                                <th scope="col">Rank</th>
-                                <th scope="col">Name</th>
-                                <th scope="col" className="right-align">
-                                    Steps
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {leaderboard.map((entry, index) => (
-                                <tr
-                                    key={entry.participantId}
-                                    className={
-                                        index < 10
-                                            ? `leaderboard-row leaderboard-row--podium leaderboard-row--podium-${
-                                                  index + 1
-                                              }`
-                                            : 'leaderboard-row'
-                                    }
-                                >
-                                    <td className="rank">
-                                        <span className="rank-number">
-                                            {index + 1}
-                                        </span>
-                                        {index < 10 ? (
-                                            <span
-                                                className={`rank-emoji rank-emoji--${
-                                                    index + 1
-                                                }`}
-                                                aria-hidden="true"
-                                                role="img"
-                                            >
-                                                {podiumEmojis[index]}
-                                            </span>
-                                        ) : null}
-                                    </td>
-                                    <td>
-                                        <div className="participant">
-                                            {entry.photo ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
-                                                    src={entry.photo}
-                                                    alt={entry.name}
-                                                    referrerPolicy="no-referrer"
-                                                />
-                                            ) : null}
-                                            <div>
-                                                <p className="participant-name">
-                                                    {entry.name}
-                                                </p>
-                                                {index < 10 ? (
-                                                    <p
-                                                        className={`podium-label podium-label--${
-                                                            index + 1
-                                                        }`}
-                                                    >
-                                                        {podiumTitles[index]}
-                                                    </p>
-                                                ) : null}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="steps">
-                                        <div className="steps-value">
-                                            {entry.totalSteps.toLocaleString()}
-                                        </div>
-                                        {entry.syncStatus === 'error' && (
-                                            <div
-                                                className={[
-                                                    'sync-pill',
-                                                    entry.isRefreshing
-                                                        ? 'sync-pill--refreshing'
-                                                        : '',
-                                                    entry.syncStatus === 'error'
-                                                        ? 'sync-pill--error'
-                                                        : '',
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' ')}
-                                            >
-                                                <span
-                                                    className="sync-pill__dot"
-                                                    aria-hidden="true"
-                                                />
-                                                {entry.isRefreshing
-                                                    ? 'Refreshing...'
-                                                    : 'Sync failed'}
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <LeaderboardTable
+                        rows={interactiveRows}
+                        podiumEmojis={podiumEmojis}
+                        podiumTitles={podiumTitles}
+                    />
                 ) : (
                     <>
                         <div className="empty-state">

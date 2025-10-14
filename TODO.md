@@ -31,6 +31,7 @@
 - [ ] Add a `/rules` page outlining challenge guidelines, scoring, and privacy notes.
 - [ ] Provide a `/profile` page for authenticated users to inspect their synced metrics and trigger manual refresh.
 - [x] Ensure the leaderboard is fully responsive (compact cards on mobile, accessible contrast, focus states).
+- [x] Surface per-day step breakdown in the leaderboard when selecting a participant.
 
 ## 5. Observability & Admin
 - [ ] Add server-side logging around OAuth callbacks, token refreshes, and Fit API responses (sanitize PII).

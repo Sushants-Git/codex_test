@@ -3,6 +3,11 @@ import { challengeWindowMillis } from "./challenge";
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const AGGREGATE_ENDPOINT =
     "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate";
+const DATA_SOURCES_ENDPOINT =
+    "https://www.googleapis.com/fitness/v1/users/me/dataSources";
+
+const IST_TIMEZONE = "Asia/Kolkata";
+const DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
 
 const clientId = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -104,67 +109,83 @@ export async function ensureAccessToken(
     };
 }
 
+export type DailyStepBreakdown = {
+    date: string;
+    steps: number;
+    startTimeMillis: number;
+    endTimeMillis: number;
+    source?: string;
+};
+
+export type ChallengeStepSummary = {
+    totalSteps: number;
+    dailySteps: DailyStepBreakdown[];
+};
+
+export async function fetchDailySteps(
+    accessToken: string
+): Promise<DailyStepBreakdown[]> {
+    const { dailySteps } = await fetchChallengeStepSummary(accessToken);
+    return dailySteps;
+}
+
 export async function fetchTotalSteps(accessToken: string): Promise<number> {
-    // 1️⃣ Fetch all data sources
-    const sourcesResponse = await fetch(
-        "https://www.googleapis.com/fitness/v1/users/me/dataSources",
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+    const { totalSteps } = await fetchChallengeStepSummary(accessToken);
+    return totalSteps;
+}
+
+export async function fetchChallengeStepSummary(
+    accessToken: string
+): Promise<ChallengeStepSummary> {
+    const buckets = await fetchStepBuckets(accessToken, DAY_IN_MILLIS);
+    const filteredBuckets = buckets.filter((bucket) => bucket.steps > 0);
+
+    const dailySteps = filteredBuckets.map((bucket) => ({
+        date: formatIstDate(bucket.startTimeMillis),
+        steps: bucket.steps,
+        startTimeMillis: bucket.startTimeMillis,
+        endTimeMillis: bucket.endTimeMillis,
+        source: bucket.originDataSourceId,
+    }));
+
+    const totalSteps = filteredBuckets.reduce(
+        (sum, bucket) => sum + bucket.steps,
+        0
     );
 
-    if (!sourcesResponse.ok) {
-        const errorBody = await sourcesResponse.text();
-        throw new Error(
-            `Failed to fetch data sources: ${sourcesResponse.status} ${errorBody}`
-        );
-    }
+    return {
+        totalSteps,
+        dailySteps,
+    };
+}
 
-    const sourcesData = await sourcesResponse.json();
-    const allSources = sourcesData.dataSource ?? [];
+type StepBucket = {
+    startTimeMillis: number;
+    endTimeMillis: number;
+    steps: number;
+    originDataSourceId?: string;
+};
 
-    // ✅ Filter to only step_count.delta sources, excluding manual (user_input)
-    const stepSources = allSources.filter(
-        (src: any) =>
-            src.dataStreamId?.includes("com.google.step_count.delta") &&
-            !src.dataStreamId?.includes("user_input")
-    );
-
-    if (stepSources.length === 0) {
-        throw new Error("No valid step sources found (excluding user_input).");
-    }
-
-    let aggregateBy;
-
-    const estimated = stepSources.find((src: any) =>
-        src.dataStreamId.includes("estimated_steps")
-    );
-
-    if (estimated) {
-        aggregateBy = [{ dataSourceId: estimated.dataStreamId }];
-    } else {
-        aggregateBy = stepSources.map((src: any) => ({
-            dataSourceId: src.dataStreamId,
-        }));
-    }
-
+async function fetchStepBuckets(
+    accessToken: string,
+    bucketDurationMillis: number
+): Promise<StepBucket[]> {
+    const aggregateBy = await resolveAggregateSources(accessToken);
     const payload = {
         aggregateBy,
-        // bucketByTime: { durationMillis: 24 * 60 * 60 * 1000 },
-        bucketByTime: { durationMillis:  challengeWindowMillis.end - challengeWindowMillis.start},
+        bucketByTime: { durationMillis: bucketDurationMillis },
         startTimeMillis: challengeWindowMillis.start,
         endTimeMillis: challengeWindowMillis.end,
     };
 
-    const response = await fetch(
-        "https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate",
-        {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-        }
-    );
+    const response = await fetch(AGGREGATE_ENDPOINT, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
 
     if (!response.ok) {
         const errorBody = await response.text();
@@ -174,74 +195,107 @@ export async function fetchTotalSteps(accessToken: string): Promise<number> {
     }
 
     const data = await response.json();
+    const buckets = Array.isArray(data.bucket) ? data.bucket : [];
 
-    // 3️⃣ Process each day's bucket
-    let totalSteps = 0;
-    const dailySteps: { date: string; steps: number; source?: string }[] = [];
+    return buckets
+        .map(parseBucket)
+        .filter((bucket): bucket is StepBucket => bucket !== null);
+}
 
-    data.bucket.forEach((b, i) => {
-        const start = new Date(parseInt(b.startTimeMillis)).toLocaleString(
-            "en-IN",
-            {
-                timeZone: "Asia/Kolkata",
-            }
-        );
-        const end = new Date(parseInt(b.endTimeMillis)).toLocaleString(
-            "en-IN",
-            {
-                timeZone: "Asia/Kolkata",
-            }
-        );
-
-        console.log(`Bucket ${i + 1}:`);
-        console.log(`  Start: ${start}`);
-        console.log(`  End:   ${end}`);
-        console.log(JSON.stringify(b, null, 2));
-        console.log("----------------------");
+async function resolveAggregateSources(accessToken: string) {
+    const response = await fetch(DATA_SOURCES_ENDPOINT, {
+        headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    for (const bucket of data.bucket ?? []) {
-        const dateKey = new Date(
-            parseInt(bucket.startTimeMillis)
-        ).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-        });
-
-        // .toISOString()
-        // .split("T")[0];
-        let daySteps = 0;
-
-        // Ignore all datasets except the first valid non-user_input one
-        const validDataset = bucket.dataset?.find(
-            (d) =>
-                d.point?.[0]?.originDataSourceId &&
-                !d.point[0].originDataSourceId.includes("user_input") &&
-                d.point[0].value?.[0]?.intVal > 0
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(
+            `Failed to fetch data sources: ${response.status} ${errorBody}`
         );
-
-        if (!validDataset) continue; // skip empty days
-
-        const point = validDataset.point[0];
-        const steps =
-            point.value?.[0]?.intVal ??
-            (point.value?.[0]?.fpVal ? Math.round(point.value[0].fpVal) : 0);
-
-        console.log(steps);
-
-        daySteps = steps;
-        totalSteps += steps;
-
-        dailySteps.push({
-            date: dateKey,
-            steps: daySteps,
-            source: point.originDataSourceId,
-        });
     }
 
-    // console.log(JSON.stringify(data.bucket, null, 2));
+    const sourcesData = await response.json();
+    const allSources = Array.isArray(sourcesData.dataSource)
+        ? sourcesData.dataSource
+        : [];
 
-    console.table(dailySteps);
-    console.log("🏃‍♂️ Total real steps:", totalSteps);
+    const stepSources = allSources.filter(
+        (src: any) =>
+            src?.dataStreamId?.includes("com.google.step_count.delta") &&
+            !src?.dataStreamId?.includes("user_input")
+    );
 
-    return totalSteps;
+    if (stepSources.length === 0) {
+        throw new Error("No valid step sources found (excluding user_input).");
+    }
+
+    const estimated = stepSources.find((src: any) =>
+        src.dataStreamId?.includes("estimated_steps")
+    );
+
+    if (estimated?.dataStreamId) {
+        return [{ dataSourceId: estimated.dataStreamId }];
+    }
+
+    return stepSources
+        .map((src: any) => src.dataStreamId)
+        .filter(Boolean)
+        .map((dataSourceId: string) => ({ dataSourceId }));
+}
+
+function parseBucket(rawBucket: any): StepBucket | null {
+    const start = Number.parseInt(rawBucket?.startTimeMillis, 10);
+    const end = Number.parseInt(rawBucket?.endTimeMillis, 10);
+
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        return null;
+    }
+
+    const points = (rawBucket?.dataset ?? [])
+        .flatMap((dataset: any) => dataset?.point ?? [])
+        .filter(Boolean);
+
+    let steps = 0;
+    let origin: string | undefined;
+
+    for (const point of points) {
+        const originId =
+            point?.originDataSourceId ??
+            point?.dataSourceId ??
+            point?.dataOrigin;
+
+        if (typeof originId === "string" && originId.includes("user_input")) {
+            continue;
+        }
+
+        const value = Array.isArray(point?.value) ? point.value[0] : undefined;
+        const intVal =
+            typeof value?.intVal === "number"
+                ? value.intVal
+                : typeof value?.fpVal === "number"
+                ? Math.round(value.fpVal)
+                : 0;
+
+        if (intVal > 0 && !origin && typeof originId === "string") {
+            origin = originId;
+        }
+
+        steps += intVal;
+    }
+
+    return {
+        startTimeMillis: start,
+        endTimeMillis: end,
+        steps,
+        originDataSourceId: origin,
+    };
+}
+
+function formatIstDate(millis: number): string {
+    return new Intl.DateTimeFormat("en-CA", {
+        timeZone: IST_TIMEZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(new Date(millis));
 }

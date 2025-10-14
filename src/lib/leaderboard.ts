@@ -5,7 +5,11 @@ import {
     REFRESH_STEPS_THROTTLE,
     challengeWindowMillis,
 } from './challenge';
-import { fetchTotalSteps, ensureAccessToken } from './google-fit';
+import {
+    ensureAccessToken,
+    fetchChallengeStepSummary,
+    type DailyStepBreakdown,
+} from './google-fit';
 import { getMongoClient, hasMongoUri } from './mongodb';
 
 type ParticipantDocument = {
@@ -33,6 +37,8 @@ type StepsDataDocument = {
     refreshStartedAt?: Date | string;
     status?: 'ready' | 'refreshing' | 'error';
     errorMessage?: string;
+    dailySteps?: DailyStepBreakdown[];
+    dailyStepsUpdatedAt?: Date | string;
 };
 
 export type LeaderboardRow = {
@@ -90,8 +96,10 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
 
             const now = Date.now();
             const needsRefresh = shouldRefresh(lastSyncedDate, now);
-            if (needsRefresh) {
+            if (needsRefresh || true) {
+            if(doc.name == "Aditya Vemuganti") {
                 staleParticipants.push(doc);
+            }
             }
 
             const refreshStartedAt = stepsDoc?.refreshStartedAt
@@ -249,7 +257,8 @@ async function refreshParticipant(participant: ParticipantDocument, db: Db) {
             participant.googleTokens
         );
 
-        const totalSteps = await fetchTotalSteps(accessToken);
+        const { totalSteps, dailySteps } =
+            await fetchChallengeStepSummary(accessToken);
         const now = new Date();
 
         const stepsCollection =
@@ -264,6 +273,8 @@ async function refreshParticipant(participant: ParticipantDocument, db: Db) {
                 {
                     $set: {
                         steps: totalSteps,
+                        dailySteps,
+                        dailyStepsUpdatedAt: now,
                         updatedAt: now,
                         lastSyncedAt: now,
                         status: 'ready',
