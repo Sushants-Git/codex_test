@@ -1,12 +1,12 @@
-import { Db, ObjectId } from "mongodb";
+import { Db, ObjectId } from 'mongodb';
 import {
     CHALLENGE_END,
     CHALLENGE_START,
-    THIRTY_MINUTES_MS,
+    REFRESH_STEPS_THROTTLE,
     challengeWindowMillis,
-} from "./challenge";
-import { fetchTotalSteps, ensureAccessToken } from "./google-fit";
-import { getMongoClient, hasMongoUri } from "./mongodb";
+} from './challenge';
+import { fetchTotalSteps, ensureAccessToken } from './google-fit';
+import { getMongoClient, hasMongoUri } from './mongodb';
 
 type ParticipantDocument = {
     _id: ObjectId;
@@ -31,7 +31,7 @@ type StepsDataDocument = {
     updatedAt?: Date | string;
     lastSyncedAt?: Date | string;
     refreshStartedAt?: Date | string;
-    status?: "ready" | "refreshing" | "error";
+    status?: 'ready' | 'refreshing' | 'error';
     errorMessage?: string;
 };
 
@@ -43,11 +43,11 @@ export type LeaderboardRow = {
     totalSteps: number;
     lastSyncedAt: Date | null;
     isRefreshing: boolean;
-    syncStatus: StepsDataDocument["status"] | "stale";
+    syncStatus: StepsDataDocument['status'] | 'stale';
 };
 
-const COLLECTION_PARTICIPANTS = "participants";
-const COLLECTION_STEPS = "stepsdata";
+const COLLECTION_PARTICIPANTS = 'participants';
+const COLLECTION_STEPS = 'stepsdata';
 
 export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
     if (!hasMongoUri) {
@@ -63,14 +63,14 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
             {
                 $lookup: {
                     from: COLLECTION_STEPS,
-                    localField: "_id",
-                    foreignField: "participantId",
-                    as: "metrics",
+                    localField: '_id',
+                    foreignField: 'participantId',
+                    as: 'metrics',
                 },
             },
             {
                 $unwind: {
-                    path: "$metrics",
+                    path: '$metrics',
                     preserveNullAndEmptyArrays: true,
                 },
             },
@@ -85,8 +85,8 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
                 stepsDoc?.lastSyncedAt ?? stepsDoc?.updatedAt ?? null;
             const lastSyncedDate = lastSyncedAt ? new Date(lastSyncedAt) : null;
             const totalSteps =
-                typeof stepsDoc?.steps === "number" ? stepsDoc.steps : 0;
-            const status = stepsDoc?.status ?? "ready";
+                typeof stepsDoc?.steps === 'number' ? stepsDoc.steps : 0;
+            const status = stepsDoc?.status ?? 'ready';
 
             const now = Date.now();
             const needsRefresh = shouldRefresh(lastSyncedDate, now);
@@ -101,22 +101,22 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
                 ? now - refreshStartedAt.getTime()
                 : null;
             const refreshTimedOut =
-                status === "refreshing" &&
+                status === 'refreshing' &&
                 millisecondsSinceRefreshStart != null &&
                 millisecondsSinceRefreshStart > 60 * 1000;
 
             const isRefreshing =
-                status === "refreshing" &&
+                status === 'refreshing' &&
                 !refreshTimedOut &&
                 (!refreshStartedAt ||
-                    millisecondsSinceRefreshStart! < THIRTY_MINUTES_MS);
+                    millisecondsSinceRefreshStart! < REFRESH_STEPS_THROTTLE);
 
             const effectiveStatus =
                 refreshTimedOut || needsRefresh
-                    ? "stale"
-                    : status === "error"
-                      ? "error"
-                      : status;
+                    ? 'stale'
+                    : status === 'error'
+                    ? 'error'
+                    : status;
 
             if (refreshTimedOut && !needsRefresh) {
                 staleParticipants.push(doc);
@@ -126,8 +126,8 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
 
             return {
                 participantId: doc._id.toString(),
-                name: doc.name ?? doc.email ?? "Participant",
-                email: doc.email ?? "",
+                name: doc.name ?? doc.email ?? 'Participant',
+                email: doc.email ?? '',
                 photo: doc.profileImageUrl ?? undefined,
                 totalSteps,
                 lastSyncedAt: lastSyncedDate,
@@ -155,14 +155,14 @@ function shouldRefresh(lastSyncedAt: Date | null, now = Date.now()) {
         return true;
     }
 
-    return now - lastSyncedAt.getTime() > THIRTY_MINUTES_MS;
+    return now - lastSyncedAt.getTime() > REFRESH_STEPS_THROTTLE;
 }
 
 const pendingSyncs = new Set<string>();
 
 export function queueParticipantSync(ids: Array<ObjectId | string>) {
     const participantIds = ids.map((id) =>
-        typeof id === "string" ? new ObjectId(id) : id
+        typeof id === 'string' ? new ObjectId(id) : id
     );
 
     const idsToSync = participantIds.filter((id) => {
@@ -182,7 +182,7 @@ export function queueParticipantSync(ids: Array<ObjectId | string>) {
     setTimeout(() => {
         refreshParticipants(idsToSync)
             .catch((error) => {
-                console.error("Failed to refresh participants", error);
+                console.error('Failed to refresh participants', error);
             })
             .finally(() => {
                 idsToSync.forEach((id) =>
@@ -212,7 +212,7 @@ async function refreshParticipants(participantIds: ObjectId[]) {
                     createdAt: new Date(),
                     participantId: participant._id,
                 },
-                $set: { status: "refreshing", refreshStartedAt: new Date() },
+                $set: { status: 'refreshing', refreshStartedAt: new Date() },
             },
             { upsert: true }
         );
@@ -225,7 +225,7 @@ async function refreshParticipants(participantIds: ObjectId[]) {
 
 export async function refreshParticipantsByIds(ids: Array<ObjectId | string>) {
     const participantIds = ids.map((id) =>
-        typeof id === "string" ? new ObjectId(id) : id
+        typeof id === 'string' ? new ObjectId(id) : id
     );
     if (participantIds.length === 0) {
         return;
@@ -238,7 +238,7 @@ async function refreshParticipant(participant: ParticipantDocument, db: Db) {
     if (!participant.googleTokens?.refreshToken) {
         await markSyncError(
             participant._id,
-            "Missing Google refresh token; reconnect account.",
+            'Missing Google refresh token; reconnect account.',
             db
         );
         return;
@@ -266,7 +266,7 @@ async function refreshParticipant(participant: ParticipantDocument, db: Db) {
                         steps: totalSteps,
                         updatedAt: now,
                         lastSyncedAt: now,
-                        status: "ready",
+                        status: 'ready',
                         errorMessage: null,
                     },
                     $setOnInsert: {
@@ -295,7 +295,7 @@ async function refreshParticipant(participant: ParticipantDocument, db: Db) {
             participant._id,
             error instanceof Error
                 ? error.message
-                : "Unknown error during Google Fit sync.",
+                : 'Unknown error during Google Fit sync.',
             db
         );
     }
@@ -318,7 +318,7 @@ async function markSyncError(
         { participantId },
         {
             $set: {
-                status: "error",
+                status: 'error',
                 errorMessage: message,
                 updatedAt: new Date(),
             },
