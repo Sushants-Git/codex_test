@@ -302,12 +302,30 @@ body {
     width: 80px;
 }
 
-.leaderboard thead th:last-child {
+.leaderboard thead th:nth-child(3) {
     width: 140px;
+    text-align: center;
+}
+
+.leaderboard thead th:last-child {
+    width: 150px;
+    padding-right: 1.5rem;
+}
+
+/* Hide "To Next Rank" header on mobile */
+.steps-needed-header {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .steps-needed-header {
+        display: table-cell;
+    }
 }
 
 .leaderboard tbody td {
     padding: 1rem 0;
+    vertical-align: middle;
     /* border-bottom: 1px solid #f0f2f5; */
 }
 
@@ -653,16 +671,365 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    justify-content: center;
     gap: 0.35rem;
+    vertical-align: middle;
+}
+
+.steps-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: flex-end;
 }
 
 .steps-value {
-    font-weight: 600;
+    font-weight: 800;
     color: #1d2939;
     font-size: 1.15rem;
     margin-right: 1rem;
     transition: all 0.3s ease;
     position: relative;
+}
+
+/* Mobile: Steps needed badge beside step count */
+.steps-needed-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    background: linear-gradient(
+        135deg,
+        rgba(37, 99, 235, 0.08),
+        rgba(124, 58, 237, 0.08)
+    );
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2563eb;
+    animation: badgeSlideIn 0.4s ease forwards;
+    opacity: 0;
+    transform: translateX(-10px);
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .steps-needed-mobile {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        gap: 0.25rem;
+    }
+
+    .steps-container {
+        gap: 0.5rem;
+    }
+
+    .steps-value {
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+}
+
+.steps-needed-mobile .arrow-icon {
+    color: #2563eb;
+    animation: arrowBounce 2s ease-in-out infinite;
+}
+
+@keyframes badgeSlideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes arrowBounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Staggered animation for badges */
+.leaderboard tbody tr:nth-child(1) .steps-needed-mobile,
+.leaderboard tbody tr:nth-child(1) .steps-needed-badge {
+    animation-delay: 0.15s;
+}
+
+.leaderboard tbody tr:nth-child(2) .steps-needed-mobile,
+.leaderboard tbody tr:nth-child(2) .steps-needed-badge {
+    animation-delay: 0.18s;
+}
+
+.leaderboard tbody tr:nth-child(3) .steps-needed-mobile,
+.leaderboard tbody tr:nth-child(3) .steps-needed-badge {
+    animation-delay: 0.21s;
+}
+
+.leaderboard tbody tr:nth-child(4) .steps-needed-mobile,
+.leaderboard tbody tr:nth-child(4) .steps-needed-badge {
+    animation-delay: 0.24s;
+}
+
+.leaderboard tbody tr:nth-child(5) .steps-needed-mobile,
+.leaderboard tbody tr:nth-child(5) .steps-needed-badge {
+    animation-delay: 0.27s;
+}
+
+.leaderboard tbody tr:nth-child(n + 6) .steps-needed-mobile,
+.leaderboard tbody tr:nth-child(n + 6) .steps-needed-badge {
+    animation-delay: 0.3s;
+}
+
+/* Desktop: Hide mobile badge and show desktop column */
+@media (min-width: 768px) {
+    .steps-needed-mobile {
+        display: none;
+    }
+}
+
+/* Desktop: Steps needed column */
+.steps-needed-desktop {
+    display: none;
+    text-align: right;
+    padding-right: 3.5rem;
+    vertical-align: middle;
+}
+
+@media (min-width: 768px) {
+    .steps-needed-desktop {
+        display: table-cell;
+    }
+}
+
+.steps-needed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.85rem;
+    background: linear-gradient(
+        135deg,
+        rgba(37, 99, 235, 0.1),
+        rgba(124, 58, 237, 0.1)
+    );
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    animation: badgePulseIn 0.5s ease forwards;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badgePulseIn {
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.steps-needed-badge .arrow-icon {
+    color: #2563eb;
+    animation: arrowBounce 2s ease-in-out infinite;
+}
+
+.steps-needed-value {
+    font-variant-numeric: tabular-nums;
+}
+
+.steps-needed-leader {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.85rem;
+    background: linear-gradient(
+        135deg,
+        rgba(250, 205, 21, 0.15),
+        rgba(249, 115, 22, 0.15)
+    );
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #ca8a04;
+    border: 1px solid rgba(250, 205, 21, 0.3);
+    animation: leaderGlow 2s ease-in-out infinite;
+}
+
+@keyframes leaderGlow {
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(250, 205, 21, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 16px rgba(250, 205, 21, 0.6);
+    }
+}
+
+/* Attention-grabbing animation for close gaps */
+.steps-needed-badge--close {
+    background: linear-gradient(
+        135deg,
+        rgba(16, 185, 129, 0.15),
+        rgba(5, 150, 105, 0.15)
+    ) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    color: #059669 !important;
+    animation: badgePulseIn 0.5s ease forwards,
+        closeGapPulse 2s ease-in-out infinite !important;
+}
+
+.steps-needed-badge--close .arrow-icon {
+    color: #059669 !important;
+    animation: arrowUrgent 1s ease-in-out infinite !important;
+}
+
+@keyframes closeGapPulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+    }
+}
+
+@keyframes arrowUrgent {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-4px);
+    }
+    75% {
+        transform: translateY(-4px);
+    }
+}
+
+@media (pointer: fine) {
+    .steps-needed-badge--close:hover {
+        background: linear-gradient(
+            135deg,
+            rgba(16, 185, 129, 0.25),
+            rgba(5, 150, 105, 0.25)
+        ) !important;
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4) !important;
+    }
+}
+
+/* Podium-specific badge styling */
+.leaderboard-row--podium-1 .steps-needed-badge,
+.leaderboard-row--podium-1 .steps-needed-mobile {
+    background: linear-gradient(
+        135deg,
+        rgba(250, 205, 21, 0.12),
+        rgba(245, 158, 11, 0.12)
+    );
+    border-color: rgba(250, 205, 21, 0.25);
+    color: #ca8a04;
+}
+
+.leaderboard-row--podium-1 .arrow-icon {
+    color: #ca8a04;
+}
+
+.leaderboard-row--podium-2 .steps-needed-badge,
+.leaderboard-row--podium-2 .steps-needed-mobile {
+    background: linear-gradient(
+        135deg,
+        rgba(148, 163, 184, 0.12),
+        rgba(100, 116, 139, 0.12)
+    );
+    border-color: rgba(148, 163, 184, 0.25);
+    color: #475569;
+}
+
+.leaderboard-row--podium-2 .arrow-icon {
+    color: #475569;
+}
+
+.leaderboard-row--podium-3 .steps-needed-badge,
+.leaderboard-row--podium-3 .steps-needed-mobile {
+    background: linear-gradient(
+        135deg,
+        rgba(249, 115, 22, 0.12),
+        rgba(234, 88, 12, 0.12)
+    );
+    border-color: rgba(249, 115, 22, 0.25);
+    color: #ea580c;
+}
+
+.leaderboard-row--podium-3 .arrow-icon {
+    color: #ea580c;
+}
+
+/* Hover effects */
+@media (pointer: fine) {
+    .steps-needed-mobile:hover {
+        background: linear-gradient(
+            135deg,
+            rgba(37, 99, 235, 0.15),
+            rgba(124, 58, 237, 0.15)
+        );
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .steps-needed-badge:hover {
+        background: linear-gradient(
+            135deg,
+            rgba(37, 99, 235, 0.18),
+            rgba(124, 58, 237, 0.18)
+        );
+        transform: scale(1.08);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+    }
+
+    .leaderboard tbody tr:hover .steps-needed-badge {
+        transform: scale(1.12);
+    }
+
+    .leaderboard tbody tr:hover .steps-needed-mobile {
+        transform: scale(1.08);
+    }
+
+    /* Podium hover effects */
+    .leaderboard-row--podium-1:hover .steps-needed-badge,
+    .leaderboard-row--podium-1:hover .steps-needed-mobile {
+        background: linear-gradient(
+            135deg,
+            rgba(250, 205, 21, 0.2),
+            rgba(245, 158, 11, 0.2)
+        );
+        box-shadow: 0 6px 16px rgba(250, 205, 21, 0.3);
+    }
+
+    .leaderboard-row--podium-2:hover .steps-needed-badge,
+    .leaderboard-row--podium-2:hover .steps-needed-mobile {
+        background: linear-gradient(
+            135deg,
+            rgba(148, 163, 184, 0.2),
+            rgba(100, 116, 139, 0.2)
+        );
+        box-shadow: 0 6px 16px rgba(148, 163, 184, 0.3);
+    }
+
+    .leaderboard-row--podium-3:hover .steps-needed-badge,
+    .leaderboard-row--podium-3:hover .steps-needed-mobile {
+        background: linear-gradient(
+            135deg,
+            rgba(249, 115, 22, 0.2),
+            rgba(234, 88, 12, 0.2)
+        );
+        box-shadow: 0 6px 16px rgba(249, 115, 22, 0.3);
+    }
 }
 
 .leaderboard-row--podium-1 .steps-value {
@@ -2149,7 +2516,7 @@ body {
 
     .steps-value {
         font-size: 1.5rem !important;
-        font-weight: 800 !important;
+        font-weight: 1000 !important;
         background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;

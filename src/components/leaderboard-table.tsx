@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { DailyStepBreakdown } from "@/lib/google-fit";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { DailyStepBreakdown } from '@/lib/google-fit';
 
 type LeaderboardRow = {
     participantId: string;
@@ -26,16 +26,16 @@ type FetchState = {
     data: DailyStepBreakdown[];
 };
 
-const DAILY_LABEL_FORMATTER = new Intl.DateTimeFormat("en-IN", {
-    month: "short",
-    day: "numeric",
-    timeZone: "Asia/Kolkata",
+const DAILY_LABEL_FORMATTER = new Intl.DateTimeFormat('en-IN', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'Asia/Kolkata',
 });
 
-const LAST_SYNCED_FORMATTER = new Intl.DateTimeFormat("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Kolkata",
+const LAST_SYNCED_FORMATTER = new Intl.DateTimeFormat('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Kolkata',
 });
 
 function formatDateLabel(startTimeMillis: number) {
@@ -84,69 +84,64 @@ export default function LeaderboardTable({
         setFetchState({ loading: false, error: null, data: [] });
     }, []);
 
-    const handleRowInteraction = useCallback(
-        (row: LeaderboardRow) => {
-            abortControllerRef.current?.abort();
-            const controller = new AbortController();
-            abortControllerRef.current = controller;
+    const handleRowInteraction = useCallback((row: LeaderboardRow) => {
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
 
-            setSelected(row);
-            setIsModalOpen(true);
-            setFetchState({ loading: true, error: null, data: [] });
+        setSelected(row);
+        setIsModalOpen(true);
+        setFetchState({ loading: true, error: null, data: [] });
 
-            void fetch(`/api/participants/${row.participantId}/daily`, {
-                signal: controller.signal,
+        void fetch(`/api/participants/${row.participantId}/daily`, {
+            signal: controller.signal,
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => null);
+                    const message =
+                        payload?.error ??
+                        `Failed to load daily steps (status ${response.status})`;
+                    throw new Error(message);
+                }
+
+                return response.json() as Promise<{
+                    dailySteps: DailyStepBreakdown[];
+                }>;
             })
-                .then(async (response) => {
-                    if (!response.ok) {
-                        const payload = await response.json().catch(() => null);
-                        const message =
-                            payload?.error ??
-                            `Failed to load daily steps (status ${response.status})`;
-                        throw new Error(message);
-                    }
-
-                    return response.json() as Promise<{
-                        dailySteps: DailyStepBreakdown[];
-                    }>;
-                })
-                .then((payload) => {
-                    if (controller.signal.aborted) {
-                        return;
-                    }
-                    const dailySteps = (Array.isArray(payload.dailySteps)
-                        ? payload.dailySteps
-                        : []
-                    ).filter(
-                        (day) =>
-                            typeof day?.steps === "number" && day.steps > 0
-                    );
-                    setFetchState({
-                        loading: false,
-                        error: null,
-                        data: dailySteps,
-                    });
-                })
-                .catch((error) => {
-                    if (
-                        error instanceof DOMException &&
-                        error.name === "AbortError"
-                    ) {
-                        return;
-                    }
-
-                    setFetchState({
-                        loading: false,
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : "Failed to load daily steps",
-                        data: [],
-                    });
+            .then((payload) => {
+                if (controller.signal.aborted) {
+                    return;
+                }
+                const dailySteps = (
+                    Array.isArray(payload.dailySteps) ? payload.dailySteps : []
+                ).filter(
+                    (day) => typeof day?.steps === 'number' && day.steps > 0
+                );
+                setFetchState({
+                    loading: false,
+                    error: null,
+                    data: dailySteps,
                 });
-        },
-        []
-    );
+            })
+            .catch((error) => {
+                if (
+                    error instanceof DOMException &&
+                    error.name === 'AbortError'
+                ) {
+                    return;
+                }
+
+                setFetchState({
+                    loading: false,
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : 'Failed to load daily steps',
+                    data: [],
+                });
+            });
+    }, []);
 
     useEffect(() => {
         if (!isModalOpen) {
@@ -154,15 +149,15 @@ export default function LeaderboardTable({
         }
 
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") {
+            if (event.key === 'Escape') {
                 event.preventDefault();
                 closeModal();
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener('keydown', handleKeyDown);
         return () => {
-            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener('keydown', handleKeyDown);
         };
     }, [isModalOpen, closeModal]);
 
@@ -172,7 +167,7 @@ export default function LeaderboardTable({
         }
 
         const originalOverflow = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
+        document.body.style.overflow = 'hidden';
 
         return () => {
             document.body.style.overflow = originalOverflow;
@@ -206,6 +201,12 @@ export default function LeaderboardTable({
                         <th scope="col" className="right-align">
                             Steps
                         </th>
+                        <th
+                            scope="col"
+                            className="right-align steps-needed-header"
+                        >
+                            To Next Rank
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -214,18 +215,27 @@ export default function LeaderboardTable({
                         const isSelected =
                             isModalOpen &&
                             selected?.participantId === entry.participantId;
+
+                        // Calculate steps needed to reach next position
+                        const stepsToNextRank =
+                            index > 0
+                                ? rows[index - 1].totalSteps -
+                                  entry.totalSteps +
+                                  1
+                                : null;
+
                         const rowClassNames = [
-                            "leaderboard-row",
+                            'leaderboard-row',
                             isPodium
                                 ? `leaderboard-row--podium leaderboard-row--podium-${
                                       index + 1
                                   }`
-                                : "",
-                            "leaderboard-row--interactive",
-                            isSelected ? "leaderboard-row--selected" : "",
+                                : '',
+                            'leaderboard-row--interactive',
+                            isSelected ? 'leaderboard-row--selected' : '',
                         ]
                             .filter(Boolean)
-                            .join(" ");
+                            .join(' ');
 
                         return (
                             <tr
@@ -237,8 +247,8 @@ export default function LeaderboardTable({
                                 onClick={() => handleRowInteraction(entry)}
                                 onKeyDown={(event) => {
                                     if (
-                                        event.key === "Enter" ||
-                                        event.key === " "
+                                        event.key === 'Enter' ||
+                                        event.key === ' '
                                     ) {
                                         event.preventDefault();
                                         handleRowInteraction(entry);
@@ -288,31 +298,98 @@ export default function LeaderboardTable({
                                     </div>
                                 </td>
                                 <td className="steps">
-                                    <div className="steps-value">
-                                        {entry.totalSteps.toLocaleString()}
+                                    <div className="steps-container">
+                                        <div className="steps-value">
+                                            {entry.totalSteps.toLocaleString()}
+                                        </div>
+                                        {stepsToNextRank !== null && (
+                                            <div
+                                                className={`steps-needed-mobile ${
+                                                    stepsToNextRank <= 1000
+                                                        ? 'steps-needed-badge--close'
+                                                        : ''
+                                                }`}
+                                            >
+                                                <svg
+                                                    width="12"
+                                                    height="12"
+                                                    viewBox="0 0 12 12"
+                                                    fill="none"
+                                                    className="arrow-icon"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path
+                                                        d="M6 10V2M6 2L2 6M6 2L10 6"
+                                                        stroke="currentColor"
+                                                        strokeWidth="1.5"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+                                                </svg>
+                                                <span>
+                                                    +
+                                                    {stepsToNextRank.toLocaleString()}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
-                                    {entry.syncStatus === "error" && (
+                                    {entry.syncStatus === 'error' && (
                                         <div
                                             className={[
-                                                "sync-pill",
+                                                'sync-pill',
                                                 entry.isRefreshing
-                                                    ? "sync-pill--refreshing"
-                                                    : "",
-                                                entry.syncStatus === "error"
-                                                    ? "sync-pill--error"
-                                                    : "",
+                                                    ? 'sync-pill--refreshing'
+                                                    : '',
+                                                entry.syncStatus === 'error'
+                                                    ? 'sync-pill--error'
+                                                    : '',
                                             ]
                                                 .filter(Boolean)
-                                                .join(" ")}
+                                                .join(' ')}
                                         >
                                             <span
                                                 className="sync-pill__dot"
                                                 aria-hidden="true"
                                             />
                                             {entry.isRefreshing
-                                                ? "Refreshing..."
-                                                : "Sync failed"}
+                                                ? 'Refreshing...'
+                                                : 'Sync failed'}
                                         </div>
+                                    )}
+                                </td>
+                                <td className="steps-needed-desktop">
+                                    {stepsToNextRank !== null ? (
+                                        <div
+                                            className={`steps-needed-badge ${
+                                                stepsToNextRank <= 1000
+                                                    ? 'steps-needed-badge--close'
+                                                    : ''
+                                            }`}
+                                        >
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 12 12"
+                                                fill="none"
+                                                className="arrow-icon"
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    d="M6 10V2M6 2L2 6M6 2L10 6"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                            </svg>
+                                            <span className="steps-needed-value">
+                                                {stepsToNextRank.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <span className="steps-needed-leader">
+                                            🏆 Leader
+                                        </span>
                                     )}
                                 </td>
                             </tr>
@@ -386,10 +463,10 @@ export default function LeaderboardTable({
                             ) : (
                                 <>
                                     <p className="leaderboard-breakdown__status leaderboard-breakdown__status--summary">
-                                        Daily totals sum to{" "}
+                                        Daily totals sum to{' '}
                                         <strong>
                                             {totalFromDaily.toLocaleString()}
-                                        </strong>{" "}
+                                        </strong>{' '}
                                         steps across the challenge window.
                                     </p>
                                     <ol className="leaderboard-breakdown__list">
