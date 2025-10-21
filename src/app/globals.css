@@ -702,6 +702,9 @@ body {
     align-items: center;
     opacity: 0.8;
     transition: opacity 0.2s ease;
+    background: none !important;
+    -webkit-text-fill-color: unset !important;
+    color: #f59e0b !important;
 }
 
 .token-expired-icon:hover {
@@ -2542,6 +2545,14 @@ body {
 
     .steps-value::after {
         display: none;
+    }
+
+    /* Ensure token expired icon is visible in mobile */
+    .steps-value .token-expired-icon {
+        background: none !important;
+        -webkit-text-fill-color: #f59e0b !important;
+        -webkit-background-clip: unset !important;
+        background-clip: unset !important;
     }
 
     /* Podium step values in mobile */
