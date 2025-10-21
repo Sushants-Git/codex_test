@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DailyStepBreakdown } from '@/lib/google-fit';
+import SignInButton from './sign-in-button';
 
 type LeaderboardRow = {
     participantId: string;
@@ -567,6 +568,7 @@ export default function LeaderboardTable({
                                                         ? '#7f1d1d'
                                                         : '#78350f',
                                                 lineHeight: '1.5',
+                                                marginBottom: '12px',
                                             }}
                                         >
                                             {selected.syncStatus === 'error'
@@ -580,6 +582,7 @@ export default function LeaderboardTable({
                                             connection and sync your latest
                                             steps.
                                         </p>
+                                        <SignInButton variant="signin" />
                                     </div>
                                 </div>
                             )}
