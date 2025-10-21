@@ -574,13 +574,13 @@ export default function LeaderboardTable({
                                             {selected.syncStatus === 'error'
                                                 ? 'Your Google Fit connection has expired. '
                                                 : 'If your steps aren\u2019t syncing, '}
-                                            Please{' '}
+                                            Click the{' '}
                                             <strong>
-                                                sign out and sign back in
+                                                &ldquo;Join Now&rdquo; button
+                                                below
                                             </strong>{' '}
-                                            to refresh your Google Fit
-                                            connection and sync your latest
-                                            steps.
+                                            to sign in and refresh your Google
+                                            Fit connection.
                                         </p>
                                         <SignInButton variant="signin" />
                                     </div>
@@ -604,9 +604,8 @@ export default function LeaderboardTable({
                                         }}
                                     >
                                         💡 <strong>Tip:</strong> If your score
-                                        stops updating, try signing out and
-                                        signing back in to refresh your
-                                        connection.
+                                        stops updating, click the sign-in button
+                                        to refresh your Google Fit connection.
                                     </div>
                                 )}
 
