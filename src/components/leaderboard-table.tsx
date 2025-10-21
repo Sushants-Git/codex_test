@@ -447,6 +447,156 @@ export default function LeaderboardTable({
                             id="leaderboard-breakdown-body"
                             className="leaderboard-breakdown__body"
                         >
+                            {/* Re-login banner - Show for error status or stale data */}
+                            {(selected.syncStatus === 'error' ||
+                                selected.syncStatus === 'stale' ||
+                                !selected.lastSyncedAt) && (
+                                <div
+                                    style={{
+                                        backgroundColor:
+                                            selected.syncStatus === 'error'
+                                                ? '#fee2e2'
+                                                : '#fef3c7',
+                                        border:
+                                            selected.syncStatus === 'error'
+                                                ? '1px solid #f87171'
+                                                : '1px solid #fbbf24',
+                                        borderRadius: '8px',
+                                        padding: '12px 16px',
+                                        marginBottom: '16px',
+                                        display: 'flex',
+                                        alignItems: 'start',
+                                        gap: '12px',
+                                    }}
+                                >
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 20 20"
+                                        fill="none"
+                                        style={{
+                                            flexShrink: 0,
+                                            marginTop: '2px',
+                                        }}
+                                    >
+                                        {selected.syncStatus === 'error' ? (
+                                            <>
+                                                <path
+                                                    d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
+                                                    stroke="#dc2626"
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                                <path
+                                                    d="M10 6V10"
+                                                    stroke="#dc2626"
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                                <path
+                                                    d="M10 14H10.01"
+                                                    stroke="#dc2626"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <path
+                                                    d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
+                                                    stroke="#d97706"
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                                <path
+                                                    d="M10 6V10"
+                                                    stroke="#d97706"
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                                <path
+                                                    d="M10 14H10.01"
+                                                    stroke="#d97706"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                />
+                                            </>
+                                        )}
+                                    </svg>
+                                    <div style={{ flex: 1 }}>
+                                        <p
+                                            style={{
+                                                margin: 0,
+                                                fontSize: '14px',
+                                                color:
+                                                    selected.syncStatus ===
+                                                    'error'
+                                                        ? '#991b1b'
+                                                        : '#92400e',
+                                                fontWeight: '500',
+                                                marginBottom: '4px',
+                                            }}
+                                        >
+                                            {selected.syncStatus === 'error'
+                                                ? '⚠️ Sync Failed'
+                                                : '🔄 Score Not Updating?'}
+                                        </p>
+                                        <p
+                                            style={{
+                                                margin: 0,
+                                                fontSize: '13px',
+                                                color:
+                                                    selected.syncStatus ===
+                                                    'error'
+                                                        ? '#7f1d1d'
+                                                        : '#78350f',
+                                                lineHeight: '1.5',
+                                            }}
+                                        >
+                                            {selected.syncStatus === 'error'
+                                                ? 'Your Google Fit connection has expired. '
+                                                : 'If your steps aren\u2019t syncing, '}
+                                            Please{' '}
+                                            <strong>
+                                                sign out and sign back in
+                                            </strong>{' '}
+                                            to refresh your Google Fit
+                                            connection and sync your latest
+                                            steps.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* General info banner for all users */}
+                            {selected.syncStatus !== 'error' &&
+                                selected.syncStatus !== 'stale' &&
+                                selected.lastSyncedAt && (
+                                    <div
+                                        style={{
+                                            backgroundColor: '#eff6ff',
+                                            border: '1px solid #93c5fd',
+                                            borderRadius: '8px',
+                                            padding: '10px 16px',
+                                            marginBottom: '16px',
+                                            fontSize: '13px',
+                                            color: '#1e3a8a',
+                                            lineHeight: '1.5',
+                                        }}
+                                    >
+                                        💡 <strong>Tip:</strong> If your score
+                                        stops updating, try signing out and
+                                        signing back in to refresh your
+                                        connection.
+                                    </div>
+                                )}
+
                             {fetchState.loading ? (
                                 <p className="leaderboard-breakdown__status">
                                     Loading daily steps…

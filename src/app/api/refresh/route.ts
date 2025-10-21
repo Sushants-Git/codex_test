@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { REFRESH_STEPS_THROTTLE } from '@/lib/challenge';
-import { refreshParticipantsByIds } from '@/lib/leaderboard';
+import { refreshParticipantsByIds, type RefreshStats } from '@/lib/leaderboard';
 import { getMongoClient, hasMongoUri } from '@/lib/mongodb';
 
 type ParticipantWithMetrics = {
@@ -72,13 +72,31 @@ export async function GET(request: Request) {
         })
         .map((doc) => doc._id);
 
+    let refreshStats: RefreshStats = {
+        totalAttempted: 0,
+        tokensRefreshed: 0,
+        successfulSyncs: 0,
+        failedSyncs: 0,
+        failedParticipants: [],
+    };
+
     if (idsToRefresh.length > 0) {
-        await refreshParticipantsByIds(idsToRefresh);
+        // refreshParticipantsByIds will:
+        // 1. Check if each participant's access token is expired
+        // 2. Refresh the token using the refresh token if expired
+        // 3. Update the refreshed tokens in the database
+        // 4. Fetch the latest steps data using the valid access token
+        // 5. Update the steps data in the database
+        refreshStats = await refreshParticipantsByIds(idsToRefresh);
     }
 
     return NextResponse.json({
         totalParticipants: participantDocs.length,
-        refreshed: idsToRefresh.length,
+        refreshAttempted: refreshStats.totalAttempted,
+        tokensRefreshed: refreshStats.tokensRefreshed,
+        successfulSyncs: refreshStats.successfulSyncs,
+        failedSyncs: refreshStats.failedSyncs,
+        failedParticipants: refreshStats.failedParticipants,
         forceRefresh: Boolean(forceRefresh),
     });
 }
