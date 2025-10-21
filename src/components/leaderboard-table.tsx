@@ -12,6 +12,7 @@ type LeaderboardRow = {
     lastSyncedAt: string | null;
     isRefreshing: boolean;
     syncStatus: string;
+    tokenExpired?: boolean;
 };
 
 type LeaderboardTableProps = {
@@ -301,6 +302,15 @@ export default function LeaderboardTable({
                                     <div className="steps-container">
                                         <div className="steps-value">
                                             {entry.totalSteps.toLocaleString()}
+                                            {entry.tokenExpired && (
+                                                <span
+                                                    className="token-expired-icon"
+                                                    title="Token expired. Please log in again to fetch the latest data."
+                                                    aria-label="Token expired"
+                                                >
+                                                    ⚠️
+                                                </span>
+                                            )}
                                         </div>
                                         {stepsToNextRank !== null && (
                                             <div

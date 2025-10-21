@@ -53,7 +53,8 @@ export default async function LeaderboardPage() {
             ? entry.lastSyncedAt.toISOString()
             : null,
         isRefreshing: entry.isRefreshing,
-        syncStatus: entry.syncStatus,
+        syncStatus: entry.syncStatus ?? 'ready',
+        tokenExpired: entry.tokenExpired ?? false,
     }));
 
     return (

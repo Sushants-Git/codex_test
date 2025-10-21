@@ -690,6 +690,22 @@ body {
     margin-right: 1rem;
     transition: all 0.3s ease;
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.token-expired-icon {
+    font-size: 0.9rem;
+    cursor: help;
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.token-expired-icon:hover {
+    opacity: 1;
 }
 
 /* Mobile: Steps needed badge beside step count */

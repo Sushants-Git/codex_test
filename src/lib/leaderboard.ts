@@ -39,6 +39,7 @@ type StepsDataDocument = {
     errorMessage?: string;
     dailySteps?: DailyStepBreakdown[];
     dailyStepsUpdatedAt?: Date | string;
+    tokenExpired?: boolean;
 };
 
 export type LeaderboardRow = {
@@ -50,6 +51,7 @@ export type LeaderboardRow = {
     lastSyncedAt: Date | null;
     isRefreshing: boolean;
     syncStatus: StepsDataDocument['status'] | 'stale';
+    tokenExpired?: boolean;
 };
 
 const COLLECTION_PARTICIPANTS = 'participants';
@@ -93,6 +95,7 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
             const totalSteps =
                 typeof stepsDoc?.steps === 'number' ? stepsDoc.steps : 0;
             const status = stepsDoc?.status ?? 'ready';
+            const tokenExpired = stepsDoc?.tokenExpired ?? false;
 
             const now = Date.now();
             const needsRefresh = shouldRefresh(lastSyncedDate, now);
@@ -139,6 +142,7 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
                 lastSyncedAt: lastSyncedDate,
                 isRefreshing,
                 syncStatus,
+                tokenExpired,
             };
         })
         .sort((a, b) => {
@@ -375,7 +379,7 @@ async function refreshParticipant(
         const stepsCollection =
             db.collection<StepsDataDocument>(COLLECTION_STEPS);
 
-        // Update steps data and participant tokens
+        // Update steps data and participant tokens, reset tokenExpired flag
         await Promise.all([
             stepsCollection.updateOne(
                 { participantId: participant._id },
@@ -388,6 +392,7 @@ async function refreshParticipant(
                         lastSyncedAt: now,
                         status: 'ready' as const,
                         errorMessage: undefined,
+                        tokenExpired: false,
                     },
                     $setOnInsert: {
                         createdAt: now,
@@ -419,11 +424,19 @@ async function refreshParticipant(
                 ? error.message
                 : 'Unknown error during Google Fit sync.';
 
+        // Check if the error is related to token expiration
+        const isTokenError =
+            error instanceof Error &&
+            (error.message.includes('refresh') ||
+                error.message.includes('token') ||
+                error.message.includes('401') ||
+                error.message.includes('invalid_grant'));
+
         console.error(
             `Failed to refresh participant ${participant._id.toString()}`,
             error
         );
-        await markSyncError(participant._id, errorReason, db);
+        await markSyncError(participant._id, errorReason, db, isTokenError);
         return {
             success: false,
             tokenRefreshed: false,
@@ -436,7 +449,8 @@ async function refreshParticipant(
 async function markSyncError(
     participantId: ObjectId,
     message: string,
-    db?: Db
+    db?: Db,
+    isTokenError?: boolean
 ) {
     let database: Db;
     if (db) {
@@ -453,6 +467,7 @@ async function markSyncError(
                 status: 'error' as const,
                 errorMessage: message,
                 updatedAt: new Date(),
+                tokenExpired: isTokenError ?? false,
             },
             $setOnInsert: { createdAt: new Date(), participantId },
         },
