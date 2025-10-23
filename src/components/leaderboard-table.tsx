@@ -632,7 +632,10 @@ export default function LeaderboardTable({
                                         steps across the challenge window.
                                     </p>
                                     <ol className="leaderboard-breakdown__list">
-                                        {fetchState.data.map((day) => (
+                                        {fetchState.data
+                                            .slice()
+                                            .sort((a, b) => b.startTimeMillis - a.startTimeMillis)
+                                            .map((day) => (
                                             <li
                                                 key={day.startTimeMillis}
                                                 className="leaderboard-breakdown__item"
