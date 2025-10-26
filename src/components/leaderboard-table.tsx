@@ -72,6 +72,25 @@ export default function LeaderboardTable({
     const abortControllerRef = useRef<AbortController | null>(null);
     const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
+    // Create randomized order while preserving ranks
+    const randomizedRows = useMemo(() => {
+        // Add original rank to each row
+        const rowsWithRank = rows.map((row, index) => ({
+            ...row,
+            originalRank: index + 1,
+            originalIndex: index,
+        }));
+
+        // Shuffle the array randomly
+        const shuffled = [...rowsWithRank];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        return shuffled;
+    }, [rows]);
+
     useEffect(() => {
         return () => {
             abortControllerRef.current?.abort();
@@ -212,16 +231,16 @@ export default function LeaderboardTable({
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.map((entry, index) => {
-                        const isPodium = index < 10;
+                    {randomizedRows.map((entry) => {
+                        const isPodium = entry.originalRank <= 10;
                         const isSelected =
                             isModalOpen &&
                             selected?.participantId === entry.participantId;
 
-                        // Calculate steps needed to reach next position
+                        // Calculate steps needed to reach next position based on original ranking
                         const stepsToNextRank =
-                            index > 0
-                                ? rows[index - 1].totalSteps -
+                            entry.originalIndex > 0
+                                ? rows[entry.originalIndex - 1].totalSteps -
                                   entry.totalSteps +
                                   1
                                 : null;
@@ -229,9 +248,7 @@ export default function LeaderboardTable({
                         const rowClassNames = [
                             'leaderboard-row',
                             isPodium
-                                ? `leaderboard-row--podium leaderboard-row--podium-${
-                                      index + 1
-                                  }`
+                                ? `leaderboard-row--podium leaderboard-row--podium-${entry.originalRank}`
                                 : '',
                             'leaderboard-row--interactive',
                             isSelected ? 'leaderboard-row--selected' : '',
@@ -259,17 +276,15 @@ export default function LeaderboardTable({
                             >
                                 <td className="rank">
                                     <span className="rank-number">
-                                        {index + 1}
+                                        {entry.originalRank}
                                     </span>
                                     {isPodium ? (
                                         <span
-                                            className={`rank-emoji rank-emoji--${
-                                                index + 1
-                                            }`}
+                                            className={`rank-emoji rank-emoji--${entry.originalRank}`}
                                             aria-hidden="true"
                                             role="img"
                                         >
-                                            {podiumEmojis[index]}
+                                            {podiumEmojis[entry.originalIndex]}
                                         </span>
                                     ) : null}
                                 </td>
@@ -289,11 +304,13 @@ export default function LeaderboardTable({
                                             </p>
                                             {isPodium ? (
                                                 <p
-                                                    className={`podium-label podium-label--${
-                                                        index + 1
-                                                    }`}
+                                                    className={`podium-label podium-label--${entry.originalRank}`}
                                                 >
-                                                    {podiumTitles[index]}
+                                                    {
+                                                        podiumTitles[
+                                                            entry.originalIndex
+                                                        ]
+                                                    }
                                                 </p>
                                             ) : null}
                                         </div>
@@ -634,22 +651,26 @@ export default function LeaderboardTable({
                                     <ol className="leaderboard-breakdown__list">
                                         {fetchState.data
                                             .slice()
-                                            .sort((a, b) => b.startTimeMillis - a.startTimeMillis)
+                                            .sort(
+                                                (a, b) =>
+                                                    b.startTimeMillis -
+                                                    a.startTimeMillis
+                                            )
                                             .map((day) => (
-                                            <li
-                                                key={day.startTimeMillis}
-                                                className="leaderboard-breakdown__item"
-                                            >
-                                                <span className="leaderboard-breakdown__date">
-                                                    {formatDateLabel(
-                                                        day.startTimeMillis
-                                                    )}
-                                                </span>
-                                                <span className="leaderboard-breakdown__steps">
-                                                    {day.steps.toLocaleString()}
-                                                </span>
-                                            </li>
-                                        ))}
+                                                <li
+                                                    key={day.startTimeMillis}
+                                                    className="leaderboard-breakdown__item"
+                                                >
+                                                    <span className="leaderboard-breakdown__date">
+                                                        {formatDateLabel(
+                                                            day.startTimeMillis
+                                                        )}
+                                                    </span>
+                                                    <span className="leaderboard-breakdown__steps">
+                                                        {day.steps.toLocaleString()}
+                                                    </span>
+                                                </li>
+                                            ))}
                                     </ol>
                                 </>
                             )}
