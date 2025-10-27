@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DailyStepBreakdown } from '@/lib/google-fit';
 import {
     filterLeaderboardData,
+    filterOptions,
     type FilterOption,
     type LeaderboardRow,
     type ProcessedLeaderboardRow,
@@ -52,6 +53,11 @@ function formatLastSynced(value: string | null) {
     return LAST_SYNCED_FORMATTER.format(date);
 }
 
+function getRandomFilter(): FilterOption {
+    const randomIndex = Math.floor(Math.random() * filterOptions.length);
+    return filterOptions[randomIndex].value;
+}
+
 export default function LeaderboardTable({
     rows,
     podiumEmojis,
@@ -59,8 +65,9 @@ export default function LeaderboardTable({
 }: LeaderboardTableProps) {
     const [selected, setSelected] = useState<LeaderboardRow | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedFilter, setSelectedFilter] =
-        useState<FilterOption>('default');
+    const [selectedFilter, setSelectedFilter] = useState<FilterOption>(() =>
+        getRandomFilter()
+    );
     const [fetchState, setFetchState] = useState<FetchState>({
         loading: false,
         error: null,
