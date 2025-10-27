@@ -74,6 +74,16 @@ export default function LeaderboardTable({
         return filterLeaderboardData(rows, selectedFilter);
     }, [rows, selectedFilter]);
 
+    // Create a sorted reference for calculating steps to next rank
+    const sortedRows = useMemo(() => {
+        return rows.slice().sort((a, b) => {
+            if (b.totalSteps === a.totalSteps) {
+                return a.name.localeCompare(b.name);
+            }
+            return b.totalSteps - a.totalSteps;
+        });
+    }, [rows]);
+
     useEffect(() => {
         return () => {
             abortControllerRef.current?.abort();
@@ -228,12 +238,14 @@ export default function LeaderboardTable({
                             isModalOpen &&
                             selected?.participantId === entry.participantId;
 
-                        // Calculate steps needed to reach next position based on original ranking
+                        // Calculate steps needed to reach next position based on overall ranking
+                        const currentParticipantIndex = sortedRows.findIndex(
+                            (row) => row.participantId === entry.participantId
+                        );
                         const stepsToNextRank =
-                            entry.originalIndex > 0
-                                ? filteredAndProcessedRows[
-                                      entry.originalIndex - 1
-                                  ].totalSteps -
+                            currentParticipantIndex > 0
+                                ? sortedRows[currentParticipantIndex - 1]
+                                      .totalSteps -
                                   entry.totalSteps +
                                   1
                                 : null;
