@@ -48,6 +48,7 @@ export default async function LeaderboardPage() {
         name: entry.name,
         email: entry.email,
         photo: entry.photo,
+        gender: entry.gender,
         totalSteps: entry.totalSteps,
         lastSyncedAt: entry.lastSyncedAt
             ? entry.lastSyncedAt.toISOString()

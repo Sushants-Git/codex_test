@@ -2,20 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DailyStepBreakdown } from '@/lib/google-fit';
+import {
+    filterLeaderboardData,
+    type FilterOption,
+    type LeaderboardRow,
+    type ProcessedLeaderboardRow,
+} from '@/lib/leaderboard-filters';
 import SignInButton from './sign-in-button';
-
-type LeaderboardRow = {
-    participantId: string;
-    name: string;
-    email: string;
-    photo?: string;
-    gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
-    totalSteps: number;
-    lastSyncedAt: string | null;
-    isRefreshing: boolean;
-    syncStatus: string;
-    tokenExpired?: boolean;
-};
+import LeaderboardFilterDropdown from './leaderboard-filter-dropdown';
 
 type LeaderboardTableProps = {
     rows: LeaderboardRow[];
@@ -65,6 +59,8 @@ export default function LeaderboardTable({
 }: LeaderboardTableProps) {
     const [selected, setSelected] = useState<LeaderboardRow | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedFilter, setSelectedFilter] =
+        useState<FilterOption>('default');
     const [fetchState, setFetchState] = useState<FetchState>({
         loading: false,
         error: null,
@@ -73,24 +69,10 @@ export default function LeaderboardTable({
     const abortControllerRef = useRef<AbortController | null>(null);
     const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
-    // Create randomized order while preserving ranks
-    const randomizedRows = useMemo(() => {
-        // Add original rank to each row
-        const rowsWithRank = rows.map((row, index) => ({
-            ...row,
-            originalRank: index + 1,
-            originalIndex: index,
-        }));
-
-        // Shuffle the array randomly
-        const shuffled = [...rowsWithRank];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-
-        return shuffled;
-    }, [rows]);
+    // Apply filtering to the data
+    const filteredAndProcessedRows = useMemo((): ProcessedLeaderboardRow[] => {
+        return filterLeaderboardData(rows, selectedFilter);
+    }, [rows, selectedFilter]);
 
     useEffect(() => {
         return () => {
@@ -215,6 +197,14 @@ export default function LeaderboardTable({
 
     return (
         <>
+            <div className="leaderboard-filter-header">
+                <h3 className="leaderboard-filter-title">Leaderboard</h3>
+                <LeaderboardFilterDropdown
+                    selectedFilter={selectedFilter}
+                    onFilterChange={setSelectedFilter}
+                />
+            </div>
+
             <table className="leaderboard" role="grid">
                 <thead>
                     <tr>
@@ -233,7 +223,7 @@ export default function LeaderboardTable({
                     </tr>
                 </thead>
                 <tbody>
-                    {randomizedRows.map((entry) => {
+                    {filteredAndProcessedRows.map((entry) => {
                         const isPodium = entry.originalRank <= 10;
                         const isSelected =
                             isModalOpen &&
@@ -242,7 +232,9 @@ export default function LeaderboardTable({
                         // Calculate steps needed to reach next position based on original ranking
                         const stepsToNextRank =
                             entry.originalIndex > 0
-                                ? rows[entry.originalIndex - 1].totalSteps -
+                                ? filteredAndProcessedRows[
+                                      entry.originalIndex - 1
+                                  ].totalSteps -
                                   entry.totalSteps +
                                   1
                                 : null;
