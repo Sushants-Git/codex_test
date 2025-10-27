@@ -17,6 +17,7 @@ type ParticipantDocument = {
     name?: string;
     email?: string;
     profileImageUrl?: string;
+    gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
     createdAt?: Date;
     googleTokens?: {
         accessToken?: string;
@@ -47,6 +48,7 @@ export type LeaderboardRow = {
     name: string;
     email: string;
     photo?: string;
+    gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
     totalSteps: number;
     lastSyncedAt: Date | null;
     isRefreshing: boolean;
@@ -138,6 +140,7 @@ export async function fetchLeaderboard(limit = 100): Promise<LeaderboardRow[]> {
                 name: doc.name ?? doc.email ?? 'Participant',
                 email: doc.email ?? '',
                 photo: doc.profileImageUrl ?? undefined,
+                gender: doc.gender,
                 totalSteps,
                 lastSyncedAt: lastSyncedDate,
                 isRefreshing,

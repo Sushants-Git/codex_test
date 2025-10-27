@@ -9,6 +9,7 @@ type LeaderboardRow = {
     name: string;
     email: string;
     photo?: string;
+    gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
     totalSteps: number;
     lastSyncedAt: string | null;
     isRefreshing: boolean;
@@ -219,6 +220,7 @@ export default function LeaderboardTable({
                     <tr>
                         <th scope="col">Rank</th>
                         <th scope="col">Name</th>
+                        <th scope="col">Gender</th>
                         <th scope="col" className="right-align">
                             Steps
                         </th>
@@ -315,6 +317,26 @@ export default function LeaderboardTable({
                                             ) : null}
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    {entry.gender ? (
+                                        <span className="gender-display">
+                                            {entry.gender === 'male'
+                                                ? 'Male'
+                                                : entry.gender === 'female'
+                                                ? 'Female'
+                                                : entry.gender === 'other'
+                                                ? 'Other'
+                                                : entry.gender ===
+                                                  'prefer-not-to-say'
+                                                ? 'Prefer not to say'
+                                                : ''}
+                                        </span>
+                                    ) : (
+                                        <span className="gender-display not-specified">
+                                            Not specified
+                                        </span>
+                                    )}
                                 </td>
                                 <td className="steps">
                                     <div className="steps-container">
