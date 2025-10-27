@@ -98,9 +98,6 @@ export default function LeaderboardFilterDropdown({
                         <span className="filter-dropdown-label">
                             {selectedOption.label}
                         </span>
-                        <span className="filter-dropdown-description">
-                            {selectedOption.description}
-                        </span>
                     </div>
                 </div>
                 <div className="filter-dropdown-arrow">
@@ -142,9 +139,6 @@ export default function LeaderboardFilterDropdown({
                             <div className="filter-option-content">
                                 <span className="filter-option-label">
                                     {option.label}
-                                </span>
-                                <span className="filter-option-description">
-                                    {option.description}
                                 </span>
                             </div>
                             {option.value === selectedFilter && (
