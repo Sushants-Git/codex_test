@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import SignInButton from './sign-in-button';
+import CountdownTimer from './countdown-timer';
 
 interface PageHeaderProps {
     session: any;
@@ -20,7 +21,6 @@ export default function PageHeader({ session }: PageHeaderProps) {
             (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         )
     );
-    const daysRemaining = Math.max(0, totalDays - daysElapsed);
     const progressPercentage = Math.min(
         100,
         Math.max(0, (daysElapsed / totalDays) * 100)
@@ -70,9 +70,7 @@ export default function PageHeader({ session }: PageHeaderProps) {
                     <div className="compact-stats">
                         <div className="stat-compact">
                             <span className="stat-compact-icon">⏰</span>
-                            <span className="stat-compact-value">
-                                {daysRemaining}d left
-                            </span>
+                            <CountdownTimer className="stat-compact-value" />
                         </div>
                         <div className="stat-compact">
                             <span className="stat-compact-icon">📊</span>
