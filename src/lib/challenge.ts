@@ -27,7 +27,7 @@ function createIstDate(
 }
 
 export const CHALLENGE_START = createIstDate(6, 0, 0);
-export const CHALLENGE_END = createIstDate(30, 23, 59, 59, 999);
+export const CHALLENGE_END = createIstDate(31, 23, 59, 59, 999);
 
 export const REFRESH_STEPS_THROTTLE = 60 * 60 * 1000; // 1 hour
 
