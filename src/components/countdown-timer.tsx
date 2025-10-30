@@ -14,7 +14,9 @@ interface TimeRemaining {
     isExpired: boolean;
 }
 
-export default function CountdownTimer({ className = '' }: CountdownTimerProps) {
+export default function CountdownTimer({
+    className = '',
+}: CountdownTimerProps) {
     const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
         hours: 0,
         minutes: 0,
@@ -38,7 +40,9 @@ export default function CountdownTimer({ className = '' }: CountdownTimerProps) 
             }
 
             const hours = Math.floor(difference / (1000 * 60 * 60));
-            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const minutes = Math.floor(
+                (difference % (1000 * 60 * 60)) / (1000 * 60)
+            );
             const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
             return {
