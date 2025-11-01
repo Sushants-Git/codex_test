@@ -22,6 +22,8 @@ type FetchState = {
     loading: boolean;
     error?: string | null;
     data: DailyStepBreakdown[];
+    fromCache?: boolean;
+    warning?: string;
 };
 
 const DAILY_LABEL_FORMATTER = new Intl.DateTimeFormat('en-IN', {
@@ -102,7 +104,13 @@ export default function LeaderboardTable({
         abortControllerRef.current = null;
         setIsModalOpen(false);
         setSelected(null);
-        setFetchState({ loading: false, error: null, data: [] });
+        setFetchState({
+            loading: false,
+            error: null,
+            data: [],
+            fromCache: false,
+            warning: undefined,
+        });
     }, []);
 
     const handleRowInteraction = useCallback((row: LeaderboardRow) => {
@@ -112,7 +120,13 @@ export default function LeaderboardTable({
 
         setSelected(row);
         setIsModalOpen(true);
-        setFetchState({ loading: true, error: null, data: [] });
+        setFetchState({
+            loading: true,
+            error: null,
+            data: [],
+            fromCache: false,
+            warning: undefined,
+        });
 
         void fetch(`/api/participants/${row.participantId}/daily`, {
             signal: controller.signal,
@@ -128,6 +142,8 @@ export default function LeaderboardTable({
 
                 return response.json() as Promise<{
                     dailySteps: DailyStepBreakdown[];
+                    fromCache?: boolean;
+                    warning?: string;
                 }>;
             })
             .then((payload) => {
@@ -143,6 +159,8 @@ export default function LeaderboardTable({
                     loading: false,
                     error: null,
                     data: dailySteps,
+                    fromCache: payload.fromCache || false,
+                    warning: payload.warning,
                 });
             })
             .catch((error) => {
@@ -160,6 +178,8 @@ export default function LeaderboardTable({
                             ? error.message
                             : 'Failed to load daily steps',
                     data: [],
+                    fromCache: false,
+                    warning: undefined,
                 });
             });
     }, []);
@@ -653,6 +673,41 @@ export default function LeaderboardTable({
                                 </p>
                             ) : (
                                 <>
+                                    {fetchState.warning && (
+                                        <div
+                                            style={{
+                                                backgroundColor: '#fef3c7',
+                                                border: '1px solid #fbbf24',
+                                                borderRadius: '8px',
+                                                padding: '10px 16px',
+                                                marginBottom: '16px',
+                                                fontSize: '13px',
+                                                color: '#92400e',
+                                                lineHeight: '1.5',
+                                            }}
+                                        >
+                                            ⚠️ <strong>Warning:</strong>{' '}
+                                            {fetchState.warning}
+                                        </div>
+                                    )}
+                                    {fetchState.fromCache && (
+                                        <div
+                                            style={{
+                                                backgroundColor: '#eff6ff',
+                                                border: '1px solid #93c5fd',
+                                                borderRadius: '8px',
+                                                padding: '10px 16px',
+                                                marginBottom: '16px',
+                                                fontSize: '13px',
+                                                color: '#1e3a8a',
+                                                lineHeight: '1.5',
+                                            }}
+                                        >
+                                            💾 <strong>Cache:</strong> This data
+                                            was loaded from cache for faster
+                                            performance.
+                                        </div>
+                                    )}
                                     <p className="leaderboard-breakdown__status leaderboard-breakdown__status--summary">
                                         Daily totals sum to{' '}
                                         <strong>

@@ -7,7 +7,13 @@ import {
     fetchChallengeStepSummary,
     type DailyStepBreakdown,
 } from '@/lib/google-fit';
-import { getMongoClient, hasMongoUri } from '@/lib/mongodb';
+import {
+    getMongoClient,
+    hasMongoUri,
+    getCachedDailySteps,
+    setCachedDailySteps,
+    shouldFetchFreshData,
+} from '@/lib/mongodb';
 
 const COLLECTION_PARTICIPANTS = 'participants';
 const COLLECTION_STEPS = 'stepsdata';
@@ -60,10 +66,10 @@ export async function GET(
 
     const client = await getMongoClient();
     const db = client.db();
-    const participantsCollection =
-        db.collection<ParticipantDocument>(COLLECTION_PARTICIPANTS);
-    const stepsCollection =
-        db.collection<StepsDataDocument>(COLLECTION_STEPS);
+    const participantsCollection = db.collection<ParticipantDocument>(
+        COLLECTION_PARTICIPANTS
+    );
+    const stepsCollection = db.collection<StepsDataDocument>(COLLECTION_STEPS);
 
     const participant = await participantsCollection.findOne({ _id: objectId });
 
@@ -78,15 +84,37 @@ export async function GET(
         );
     }
 
+    // Check cache first
+    const cacheDoc = await getCachedDailySteps(objectId);
+    const shouldFresh = shouldFetchFreshData(cacheDoc);
+
+    // If we have recent cached data and don't need fresh data, return cache
+    if (!shouldFresh && cacheDoc?.dailySteps) {
+        console.log(
+            `Returning cached daily steps for participant ${participantId}`
+        );
+        return NextResponse.json({
+            participantId,
+            dailySteps: cacheDoc.dailySteps,
+            fromCache: true,
+        });
+    }
+
+    // Try to fetch fresh data
     try {
+        console.log(
+            `Fetching fresh daily steps for participant ${participantId}`
+        );
         const { accessToken, updatedTokens } = await ensureAccessToken(
-            participant.googleTokens
+            participant.googleTokens as any // Type assertion to fix the compilation error
         );
 
-        const { totalSteps, dailySteps } =
-            await fetchChallengeStepSummary(accessToken);
+        const { totalSteps, dailySteps } = await fetchChallengeStepSummary(
+            accessToken
+        );
         const now = new Date();
 
+        // Update both the existing steps collection and the new cache
         await Promise.all([
             participantsCollection.updateOne(
                 { _id: objectId },
@@ -116,23 +144,45 @@ export async function GET(
                 },
                 { upsert: true }
             ),
+            setCachedDailySteps(objectId, dailySteps, true),
         ]);
 
         return NextResponse.json({
             participantId,
             dailySteps,
+            fromCache: false,
         });
     } catch (error) {
         console.error(
             `Failed to fetch daily steps for participant ${participantId}`,
             error
         );
+
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : 'Failed to fetch daily steps';
+
+        // Store the failed attempt in cache
+        await setCachedDailySteps(objectId, [], false, errorMessage);
+
+        // If we have cached data from a previous successful fetch, return it
+        if (cacheDoc?.dailySteps && cacheDoc.dailySteps.length > 0) {
+            console.log(
+                `Returning cached daily steps for participant ${participantId} after fetch failure`
+            );
+            return NextResponse.json({
+                participantId,
+                dailySteps: cacheDoc.dailySteps,
+                fromCache: true,
+                warning: 'Data may be outdated due to sync failure',
+            });
+        }
+
+        // No cached data available, return error
         return NextResponse.json(
             {
-                error:
-                    error instanceof Error
-                        ? error.message
-                        : 'Failed to fetch daily steps',
+                error: errorMessage,
             },
             { status: 500 }
         );
